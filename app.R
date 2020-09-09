@@ -1,110 +1,46 @@
----
-title: "Estudi comarques"
-author: "Projecte Òrbita"
-date: "9/9/2020"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(ggplot2)
 library(sf)
 library(leaflet)
-```
+library(shiny)
 
-Hem agafat les dades d'aquí: 
-
-https://dadescovid.cat/descarregues?drop_es_residencia=2&tipus_territori=territori
-
-Agafem les dades de casos
-
-```{r}
 df <- read.csv(file.path("data", "comarques_setmanal.csv"), sep = ";", encoding = "UTF-8")
-```
-
-Agafem només població general
-
-```{r}
 df <- df[df$RESIDENCIA == "No", ]
 df$RESIDENCIA <- NULL
-```
 
-Agafem els casos de les dues últimes setmanes
-
-```{r}
 df$DATA_INI <- lubridate::ymd(df$DATA_INI)
 df$DATA_FI <- lubridate::ymd(df$DATA_FI)
 ultim_dia <- max(df$DATA_FI)
 df <- df[df$DATA_FI %in% c(ultim_dia, ultim_dia - 7), ]
-```
 
-Calculem la tendència (percentatge d'augment de taxa de casos i de IEPG)
-```{r}
 cols_ <- c("IEPG_CONFIRMAT", "TAXA_CASOS_CONFIRMAT")
 tend <- df[df$DATA_FI == ultim_dia, cols_] / df[df$DATA_FI == ultim_dia - 7, cols_] - 1
 # A l'alta ribagorça estan molt bé!
 tend$IEPG_CONFIRMAT[is.na(tend$IEPG_CONFIRMAT)] <- 0 
 tend$TAXA_CASOS_CONFIRMAT[is.na(tend$TAXA_CASOS_CONFIRMAT)] <- 0
 names(tend) <- c("Tendència_IEPG", "Tendència taxa casos")
-```
 
-Sumem les dues últimes setmanes:
-
-```{r}
 abs_cols_ <- c("CASOS_CONFIRMAT", "PCR", "INGRESSOS_TOTAL", "INGRESSOS_CRITIC", "EXITUS")
 abs <- df %>% group_by(NOM) %>% summarise_at(abs_cols_, sum, na.rm = TRUE)
-```
 
-```{r}
 rel_cols_ <- c("NOM", "CODI", "IEPG_CONFIRMAT", "R0_CONFIRMAT_M", "TAXA_CASOS_CONFIRMAT", "TAXA_PCR", "PERC_PCR_POSITIVES")
 rel <- df[df$DATA_FI == ultim_dia, rel_cols_]
-```
 
-Tot junt
-
-```{r}
 tot <- merge(abs, rel)
 tot <- cbind.data.frame(tot, tend)
-```
 
-# Mapes
-
-Agafem el mapa d'aquí: https://vangdata.carto.com/tables/shapefiles_catalunya_comarcas/public/map
-
-```{r}
 map <- st_read(file.path("mapes", "shapefiles_catalunya_comarcas.shp"))
 tmap <- map
 tmap$geometry <- NULL
-```
 
-Per ara encara no tenim el Moianès en el mapa, així que em temo que l'haurem d'ajuntar amb el Bages:
-
-```{r}
 tot[tot$NOM == "BAGES", abs_cols_] <- tot[tot$NOM == "BAGES", abs_cols_] + tot[tot$NOM == "MOIANÈS", abs_cols_]
 tot <- tot[-which(tot$NOM == "MOIANÈS"), ]
-```
 
-Agafem les escoles
-
-```{r}
 esc <- read.csv(file.path("escoles", "totcat_nivells_junts.csv"), sep = ";", dec=",")
 esc$estat <- "normal"
-```
 
-
-# Ajuntem
-
-```{r}
 df <- st_as_sf(merge(tot, map, by.x = "CODI", by.y = "comarca"))
-```
 
-
-# Gràfic
-
-Icones:
-
-```{r}
 wdt <- 14
 hgt <- 12
 icones_escoles <- icons(
@@ -120,10 +56,7 @@ icones_escoles <- icons(
   iconAnchorX = wdt/2, iconAnchorY = hgt/2,
 )
 pal <- colorNumeric(palette = "plasma", domain = df$IEPG_CONFIRMAT, reverse = T)
-```
 
-
-```{r}
 lflet <- leaflet() %>%
   addProviderTiles(provider = providers$CartoDB.Positron) %>%
   setView(lat = 42, lng = 2, zoom = 8) %>%
@@ -140,15 +73,8 @@ lflet <- leaflet() %>%
     popup = as.character(esc$Denominació.completa),
     label = as.character(esc$Denominació.completa),
     icon = icones_escoles
-  )
+)
 
-```
-
-```{r}
-library(shiny)
-```
-
-```{r}
 r_colors <- rgb(t(col2rgb(colors()) / 255))
 names(r_colors) <- colors()
 ui <- fluidPage(
@@ -161,9 +87,6 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-```
 
-```{r}
 runGitHub( "Projecte-Orbita/escoles.git", "ecorreig")
-```
 
