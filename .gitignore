@@ -1,0 +1,7 @@
+*.xlsx
+packrat
+.Rhistory
+.Rprofile
+.Rproj.user
+*.html
+reobertura escoles.Rproj

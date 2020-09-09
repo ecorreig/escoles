@@ -1,0 +1,117 @@
+---
+title: "Estudi reobertura escoles"
+author: "Projecte Òrbita"
+date: "3/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+```
+
+# Agafem les dades
+
+```{r}
+df <- read_xlsx("dades_covid_1set.xlsx")
+```
+
+Traiem l'alta ribagorça perquè no hi ha positius:
+
+```{r}
+df <- df[-which(df$Territori == "ALTA RIBAGORÇA"), ]
+```
+
+```{r}
+df$poblacio <- df$`Taxa confirmats per PCR`/df$`Casos confirmats per PCR` * 100000
+```
+
+La població total que tenim és: 
+
+```{r}
+sum(df$poblacio)
+```
+
+Ens en falta una mica, la posem equitativament a les regions:
+
+```{r}
+df$poblacio <- df$poblacio / sum(df$poblacio) * 7500000
+df$ratio_població <- df$poblacio / sum(df$poblacio)
+```
+
+La població escolaritzada és de 
+
+```{r}
+df$poblacio_escolaritzada <- 1365000 * df$ratio_població
+```
+
+# Càlculs
+
+Alumnes infectats:
+
+```{r}
+df$alumnes_infectats <- df$`Taxa confirmats per PCR`/100000 * df$poblacio_escolaritzada
+```
+
+```{r}
+hist(df$alumnes_infectats)
+```
+
+```{r}
+df$prev <- df$`Taxa confirmats per PCR`/100000
+df$prob_cas_classe <- 1 - dpois(0, df$prev * 20)
+df$prob_cas_escola_1l <- 1 - dpois(0, df$prev * 150 * 1)
+df$prob_cas_escola_2l <- 1 - dpois(0, df$prev * 150 * 2)
+df$prob_cas_escola_3l <- 1 - dpois(0, df$prev * 150 * 3)
+df$prob_cas_escola_4l <- 1 - dpois(0, df$prev * 150 * 4)
+df$escoles <- 2.3 * df$poblacio_escolaritzada / 150
+```
+
+(escoles = n * ( .3 /150 + .4 / 300 + .2 * 450 / .1 * 600) = n * (.2 + .8 + .9 + .4) / 150 = 2.3 * n / 150)
+
+```{r}
+df$num_classes <- ceiling(df$poblacio_escolaritzada / 20)
+df$num_classes_infectades <- ceiling(df$prob_cas_classe * df$num_classes)
+df$num_families_afectades <- df$num_classes_infectades * 20
+```
+
+Total escoles afectades (assumint 20% escoles 1 línia, 40% dues línies, 30% tres línies i 10% 4 línies):
+
+```{r}
+df$num_escoles_infectades <- ceiling(df$prob_cas_escola_1l * round(df$escoles * .2)) + ceiling(df$prob_cas_escola_2l * round(df$escoles * .4)) + ceiling(df$prob_cas_escola_3l * round(df$escoles * .3)) + ceiling(df$prob_cas_escola_4l * round(df$escoles * .1))
+```
+
+En total
+
+```{r}
+total_nens <- 1365000
+nens_estudiats <- sum(df$poblacio_escolaritzada)
+per <- nens_estudiats/total_nens
+```
+
+Total classes afectades:
+
+```{r}
+ceiling(sum(df$num_classes_infectades / per))
+```
+
+Total escoles afectades:
+
+```{r}
+ceiling(sum(df$num_escoles_infectades) / per)
+```
+
+Num famílies afectades:
+
+Si només tanca la classe:
+
+```{r}
+ceiling(sum(df$num_classes_infectades / per)) * 20
+```
+
+Si també tanca l'escola:
+
+```{r}
+ceiling(sum(df$num_escoles_infectades) / per) * 345
+```
+
