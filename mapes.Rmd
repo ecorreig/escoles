@@ -162,8 +162,3 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 ```
-
-```{r}
-runGitHub( "Projecte-Orbita/escoles.git", "ecorreig")
-```
-

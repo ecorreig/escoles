@@ -5,3 +5,4 @@ packrat
 .Rproj.user
 *.html
 reobertura escoles.Rproj
+packrat/lib*/
