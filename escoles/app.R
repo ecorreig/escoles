@@ -1,8 +1,11 @@
+library(lubridate)
 library(dplyr)
-library(ggplot2)
-library(sf)
+library(tidyr)
 library(leaflet)
 library(shiny)
+library(sf)
+days_back <- 14
+correction <- 3  # Data from last 3 days is no good
 
 deploy <- T
 
@@ -12,42 +15,90 @@ if (deploy) {
   encoding <- "latin1"
 }
 
-df <- read.csv(file.path("data", "comarques_setmanal.csv"), sep = ";", encoding = encoding)
-df <- df[df$RESIDENCIA == "No", ]
-df$RESIDENCIA <- NULL
+today <- today()
+start <- today - days_back - correction - 1
+week <- today - 7 - correction - 1
+end <- today - correction
 
-df$DATA_INI <- lubridate::ymd(df$DATA_INI)
-df$DATA_FI <- lubridate::ymd(df$DATA_FI)
-ultim_dia <- max(df$DATA_FI)
-df <- df[df$DATA_FI %in% c(ultim_dia, ultim_dia - 7), ]
+# TODO: filter also by date
+p <- "https://analisi.transparenciacatalunya.cat/resource/jj6z-iyrp.json"
+q <- "?$where=resultatcoviddescripcio='Positiu PCR'"
+l <- paste0(p, q)
+df <- RSocrata::read.socrata(l, stringsAsFactors = F)
 
-cols_ <- c("IEPG_CONFIRMAT", "TAXA_CASOS_CONFIRMAT")
-tend <- df[df$DATA_FI == ultim_dia, cols_] / df[df$DATA_FI == ultim_dia - 7, cols_] - 1
-# A l'alta ribagorça estan molt bé!
-tend$IEPG_CONFIRMAT[is.na(tend$IEPG_CONFIRMAT)] <- 0 
-tend$TAXA_CASOS_CONFIRMAT[is.na(tend$TAXA_CASOS_CONFIRMAT)] <- 0
-names(tend) <- c("Tendència_IEPG", "Tendència taxa casos")
+df$data <- ymd(df$data)
+df <- df[(df$data > start & df$data < end), ]
 
-abs_cols_ <- c("CASOS_CONFIRMAT", "PCR", "INGRESSOS_TOTAL", "INGRESSOS_CRITIC", "EXITUS")
-abs <- df %>% group_by(NOM) %>% summarise_at(abs_cols_, sum, na.rm = TRUE)
 
-rel_cols_ <- c("NOM", "CODI", "IEPG_CONFIRMAT", "R0_CONFIRMAT_M", "TAXA_CASOS_CONFIRMAT", "TAXA_PCR", "PERC_PCR_POSITIVES")
-rel <- df[df$DATA_FI == ultim_dia, rel_cols_]
+wt <- tidyr::pivot_wider(
+  df %>% 
+    mutate_at("numcasos", as.numeric) %>%
+    group_by(data, municipicodi) %>% 
+    summarise_at("numcasos", sum, na.rm = TRUE),
+  id_cols = "municipicodi",
+  names_from = "data",
+  values_from = "numcasos"
+) %>% filter(!is.na(municipicodi)) %>%
+  mutate_all(., ~ replace(., is.na(.), 0))
 
-tot <- merge(abs, rel)
-tot <- cbind.data.frame(tot, tend)
+# Obsolete?
+acc_wt <- wt %>%  pivot_longer(-"municipicodi") %>%
+  pivot_wider(names_from = municipicodi, values_from = value) %>%
+  mutate_at(-1, cumsum) %>%
+  pivot_longer(-"name", names_repair = c("unique")) %>%
+  rename_all(funs(c("name", "code", "value"))) %>%
+  pivot_wider(names_from = name, values_from = value)
 
-map <- st_read(file.path("mapes", "shapefiles_catalunya_comarcas.shp"))
-tmap <- map
-tmap$geometry <- NULL
+compute_rho <- function(x) {
+  rowSums(x[, (ncol(x) - 3):ncol(x)]) / pmax(rowSums(x[, (ncol(x) - 7):(ncol(x) - 4)]), 1)
+}
+rho <- 0
+for (i in 1:7) {
+  rho <- rho + compute_rho(wt[, 2:(ncol(wt) - i + 1)]) / 7
+}
+wt$rho <- rho
 
-tot[tot$NOM == "BAGES", abs_cols_] <- tot[tot$NOM == "BAGES", abs_cols_] + tot[tot$NOM == "MOIANÈS", abs_cols_]
-tot <- tot[-which(tot$NOM == "MOIANÈS"), ]
+last <- df[(df$data > end - correction), c("municipicodi", "numcasos")] %>%
+  mutate_at("numcasos", as.numeric) %>%
+  group_by(municipicodi) %>%
+  summarise(across(numcasos, sum, na.rm = TRUE))
+names(last)[2] <- "casos_24h"
 
-esc <- read.csv(file.path("escoles", "totcat_nivells_junts.csv"), sep = ";", dec=",", encoding =encoding)
+tt <- df %>% 
+  mutate(across("numcasos", as.numeric)) %>% 
+  group_by(municipicodi) %>% 
+  summarise(across("numcasos", sum, na.rm = TRUE))
+
+aa <- tt %>% 
+  full_join(last, by = "municipicodi") %>% 
+  full_join(wt[, c("municipicodi", "rho")]) %>% 
+  mutate(across(c(casos_24h, rho), ~replace(., is.na(.), 0))) %>% 
+  drop_na
+
+pb <- readxl::read_excel("data/municipis.xlsx")
+pb$Codi <- substr(pb$Codi, 1, 5)
+
+jn <- pb %>% full_join(aa, by = c("Codi" = "municipicodi")) %>% 
+  filter(!is.na(Població)) %>% 
+  mutate(across(c(numcasos, casos_24h, rho), ~replace(., is.na(.), 0)))
+
+num_ <- 10^5
+jn <- jn %>% 
+  mutate(taxa_incidencia_14d = numcasos / Població * num_, 
+         taxa_casos_nous = casos_24h / Població * num_,
+         epg = taxa_incidencia_14d * rho
+  )
+
+map <- st_read(file.path("mapes", "bm5mv21sh0tpm1_20200601_0.shp"))
+map$CODIMUNI <- substr(map$CODIMUNI, 1, 5)
+
+df <- st_transform(st_as_sf(jn %>% inner_join(map, by = c("Codi" = "CODIMUNI"))), "+proj=longlat +datum=WGS84") 
+
+# Posem el risc de rebrot més gran de 500 a 500
+df$epg[df$epg > 500] <- 500
+
+esc <- read.csv(file.path("escoles", "totcat_nivells_junts.csv"), sep = ";", dec=",", encoding = "UTF-8")
 esc$estat <- "normal"
-
-df <- st_as_sf(merge(tot, map, by.x = "CODI", by.y = "comarca"))
 
 wdt <- 14
 hgt <- 12
@@ -63,17 +114,25 @@ icones_escoles <- icons(
   iconWidth = wdt, iconHeight = hgt,
   iconAnchorX = wdt/2, iconAnchorY = hgt/2,
 )
-pal <- colorNumeric(palette = "plasma", domain = df$IEPG_CONFIRMAT, reverse = T)
 
-lflet <- leaflet() %>%
-  addProviderTiles(provider = providers$CartoDB.Positron) %>%
+pal <- colorNumeric(palette = "plasma", domain = df$epg, reverse = T)
+
+lflet <- leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
+  addProviderTiles(provider = providers$CartoDB.Positron,
+                   options = providerTileOptions(updateWhenZooming = FALSE,
+                                                 updateWhenIdle = TRUE)) %>%
   setView(lat = 41.7, lng = 2, zoom = 8) %>%
   addPolygons(
     data = df,
     weight = 2,
     smoothFactor = 0.2,
     fillOpacity = .7,
-    color = ~ pal(IEPG_CONFIRMAT)
+    color = ~ pal(epg),
+    label = df$Municipi,
+    popup = df$Municipi) %>% 
+  addLegend("bottomright", pal = pal, values = df$epg,
+            title = "Risc de rebrot",
+            opacity = .8
   ) %>%
   addMarkers(
     esc$Coordenades.GEO.X,
@@ -81,14 +140,8 @@ lflet <- leaflet() %>%
     popup = as.character(esc$Denominació.completa),
     label = as.character(esc$Denominació.completa),
     icon = icones_escoles
-  ) %>%
-  addLegend("bottomright", pal = pal, values = df$IEPG_CONFIRMAT,
-            title = "Risc de rebrot",
-            opacity = 1
-  )
+  ) 
 
-r_colors <- rgb(t(col2rgb(colors()) / 255))
-names(r_colors) <- colors()
 ui <- fluidPage(
   leafletOutput("mymap", height = 700),
   p()
