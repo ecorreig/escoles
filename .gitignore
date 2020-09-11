@@ -6,3 +6,8 @@ packrat
 *.html
 reobertura escoles.Rproj
 packrat/lib*/
+.idea
+.ipynb_checkpoints
+*.ipynb
+rsconnect
+secret.R
