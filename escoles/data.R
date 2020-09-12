@@ -72,6 +72,17 @@ format_outputs <- function(df) {
   df
 }
 
+import_pop_data <- function() {
+  pb <- eadxl::read_excel("data/municipis.xlsx")
+  
+  # The codes from the API have 6 digits but in here only five (good job, gene).
+  # We have discovered that reoving the last number, both codes match, so that's
+  # what we are doing here
+  pb$Codi <- substr(pb$Codi, 1, 5)
+  
+  pb
+}
+
 # Import school data
 import_schools <- function(glink) {
   googledrive::drive_download(glink, type = "csv", overwrite = T)

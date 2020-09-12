@@ -1,6 +1,6 @@
 # Maps
 
-ipmort_map <- function() {
+import_map <- function() {
   # Taken from here (very nice that these maps are open source):
   # https://www.icgc.cat/Administracio-i-empresa/Descarregues/Capes-de-geoinformacio/Base-municipal
   map <- st_read(file.path("mapes", "bm5mv21sh0tpm1_20200601_0.shp"))
@@ -11,6 +11,7 @@ ipmort_map <- function() {
   # Lookout, need to choose correct encoding for leaflet
   st_transform(map, "+proj=longlat +datum=WGS84")
 }
+
 
 wdt <- 14
 hgt <- 12

@@ -26,6 +26,8 @@ start <- today - days_back - correction - 1
 week <- today - 7 - correction - 1
 end <- today - correction
 
+# Import data
+
 # Import cases from gene api
 covid <- import_covid(start, end)
 
@@ -42,12 +44,7 @@ last <- get_24h_cases(covid)
 covid <- merge_covid(covid, last wt)
 
 # Populational data
-pb <- readxl::read_excel("data/municipis.xlsx")
-
-# The codes from the API have 6 digits but in here only five (good job, gene).
-# We have discovered that reoving the last number, both codes match, so that's
-# what we are doing here
-pb$Codi <- substr(pb$Codi, 1, 5)
+pb <- import_pop_data()
 
 # Put population and covid data together
 jn <- merge_pob_covid(pob, covid)
@@ -55,9 +52,8 @@ jn <- merge_pob_covid(pob, covid)
 # Compute incidence, new cases and EPG every 100.000 people
 jn <- compute_epi(jn, num = 10^5)
 
-# Maps
-
-map <- ipmort_map()
+# Map
+map <- import_map()
 
 # Now, finally, put everything together
 df <- st_as_sf(jn %>% inner_join(map, by = c("Codi" = "CODIMUNI")))
@@ -66,10 +62,6 @@ df <- st_as_sf(jn %>% inner_join(map, by = c("Codi" = "CODIMUNI")))
 df <- clean_vals(df)
 
 # Compute values of Hardvard guidelines
-df <- df %>% mutate(harvard = cut(casos_24, 
-                                  breaks = c(-Inf, 1, 10, 25, Inf), 
-                                  labels = c("1-verd", "2-groc", "3-taronja", "4-vermell"), 
-                                  right = F))
 df$harvard <- compute_harvard(df$casos_24h) 
 
 # Some more cleaning and formatting for nicer output
