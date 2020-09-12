@@ -11,3 +11,4 @@ packrat/lib*/
 *.ipynb
 rsconnect
 secret.R
+*.zip

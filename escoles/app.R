@@ -3,7 +3,11 @@ library(dplyr)
 library(tidyr)
 library(leaflet)
 library(shiny)
+library(shinydashboard)
 library(sf)
+
+options(shiny.reactlog=TRUE) 
+
 days_back <- 14
 correction <- 3  # Data from last 3 days is no good
 
@@ -96,6 +100,35 @@ df <- st_transform(st_as_sf(jn %>% inner_join(map, by = c("Codi" = "CODIMUNI")))
 
 # Posem el risc de rebrot més gran de 500 a 500
 df$epg[df$epg > 500] <- 500
+# Posem la incidència de més de 500 a 500
+df$taxa_incidencia_14d[df$taxa_incidencia_14d > 500] <- 500
+
+# Calculem les guies de harvard
+df$harvard <- cut(
+  df$casos_24h, 
+  breaks = c(-Inf, 1, 10, 25, Inf), 
+  labels = c("1-verd", "2-groc", "3-taronja", "4-vermell"), 
+  right = F
+)
+
+# Netegem
+df$Codi <- NULL
+df$Altitud <- NULL
+df$Superfície <- NULL
+df$NOMMUNI <- NULL
+df$AREAOFI <- NULL
+df$AREAPOL <- NULL
+df$CODICOMAR <- NULL
+df$CODIPROV <- NULL
+df$VALIDDE <- NULL
+df$DATAALTA <- NULL
+df$rho <- round(df$rho, 2)
+df$taxa_incidencia_14d <- round(df$taxa_incidencia_14d)
+df$taxa_casos_nous <- round(df$taxa_casos_nous)
+df$epg <- round(df$epg)
+
+dt_df <- df %>% select(-one_of(c("geometry", "harvard")))
+
 
 esc <- read.csv(file.path("escoles", "totcat_nivells_junts.csv"), sep = ";", dec=",", encoding = "UTF-8")
 esc$estat <- "normal"
@@ -115,40 +148,102 @@ icones_escoles <- icons(
   iconAnchorX = wdt/2, iconAnchorY = hgt/2,
 )
 
-pal <- colorNumeric(palette = "plasma", domain = df$epg, reverse = T)
+ui <- dashboardPage(
+  skin = "green",
+  dashboardHeader(title = "COVID-19 ESCOLES"),
+  dashboardSidebar(
+    selectInput("colour", h3("Escala de colors"), 
+                choices = list("Risc de rebrot" = 1, 
+                               "Taxa de positius" = 2,
+                               "Rho" = 3, 
+                               "Guia de Harvard" = 4), 
+                selected = 1)
+  ), 
+  dashboardBody(
+    fluidRow(box(width = 12, leafletOutput(outputId = "mymap"))),
+    fluidRow(box(width = 12, dataTableOutput(outputId = "summary_table"))),
+    tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
+  ),
 
-lflet <- leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
-  addProviderTiles(provider = providers$CartoDB.Positron,
-                   options = providerTileOptions(updateWhenZooming = FALSE,
-                                                 updateWhenIdle = TRUE)) %>%
-  setView(lat = 41.7, lng = 2, zoom = 8) %>%
-  addPolygons(
-    data = df,
-    weight = 2,
-    smoothFactor = 0.2,
-    fillOpacity = .7,
-    color = ~ pal(epg),
-    label = df$Municipi,
-    popup = df$Municipi) %>% 
-  addLegend("bottomright", pal = pal, values = df$epg,
-            title = "Risc de rebrot",
-            opacity = .8
-  ) %>%
-  addMarkers(
-    esc$Coordenades.GEO.X,
-    esc$Coordenades.GEO.Y,
-    popup = as.character(esc$Denominació.completa),
-    label = as.character(esc$Denominació.completa),
-    icon = icones_escoles
-  ) 
-
-ui <- fluidPage(
-  leafletOutput("mymap", height = 700),
-  p()
+  leafletOutput("mymap", height = 1000)
 )
 
 server <- function(input, output, session) {
-  output$mymap <- renderLeaflet({lflet})
+  
+  col <- reactive({
+    if (input$colour == 1) {
+      col <- "epg"
+    } else if (input$colour == 2) {
+      col <- "taxa_incidencia_14d"
+    } else if (input$colour == 3) {
+      col <- "rho"
+    } else if (input$colour == 4) {
+      col <- "harvard"
+    } else {
+      stop("I don't understand the input, shithead.")
+    }
+  })
+  
+  pal <- reactive({
+    if (input$colour == 1) {
+      pal <- colorNumeric(palette = "plasma", domain = df[["epg"]], reverse = T)
+    } else if (input$colour == 2) {
+      pal <- colorNumeric(palette = "plasma", domain = df[["taxa_incidencia_14d"]], reverse = T)
+    } else if (input$colour == 3) {
+      pal <- colorNumeric(palette = "plasma", domain = df[["rho"]], reverse = T)
+    } else if (input$colour == 4) {
+      pal <- colorFactor(palette = "RdYlGn", domain = df[["harvard"]], reverse = T)
+    } else {
+      stop("I don't understand the input, shithead.")
+    }
+  })
+  # FIXME: this is very stupid
+  tit <- reactive({
+    if (input$colour == 1) {
+      tit <- "Risc de rebrot"
+    } else if (input$colour == 2) {
+      tit <- "Taxa de positius"
+    } else if (input$colour == 3) {
+      tit <- "Rho"
+    } else if (input$colour == 4) {
+      tit <- "Guia de Harvard"
+    } else {
+      stop("I don't understand the input, shithead.")
+    }
+  })
+
+  output$mymap <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(provider = providers$CartoDB.Positron,
+                       options = providerTileOptions(updateWhenZooming = FALSE,
+                                                     updateWhenIdle = TRUE)) %>%
+      setView(lat = 41.7, lng = 2, zoom = 7) %>%
+      addPolygons(
+        data = df,
+        weight = 2,
+        smoothFactor = 0.2,
+        fillOpacity = .7,
+        color = ~ pal()(df[[col()]]),
+        label = df$Municipi,
+        popup = df$Municipi) %>% 
+      addLegend("bottomright", pal = pal(), values = df[[col()]],
+                title = tit(),
+                opacity = .8
+      )
+      # addMarkers(
+      #   esc$Coordenades.GEO.X,
+      #   esc$Coordenades.GEO.Y,
+      #   popup = as.character(esc$Denominació.completa),
+      #   label = as.character(esc$Denominació.completa),
+      #   icon = icones_escoles
+      # ) 
+  })
+  output$summary_table <- renderDataTable({
+    DT::dataTableProxy(outputId = 'tbl') %>%
+      DT::hideCols(hide = c("geometry", "harvard"))
+    df
+  }
+  )  
 }
 
 shinyApp(ui, server)
