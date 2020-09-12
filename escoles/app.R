@@ -6,18 +6,8 @@ library(shiny)
 library(shinydashboard)
 library(sf)
 
-options(shiny.reactlog=TRUE) 
-
 days_back <- 14
 correction <- 3  # Data from last 3 days is no good
-
-deploy <- T
-
-if (deploy) {
-  encoding <- "UTF-8"
-} else {
-  encoding <- "latin1"
-}
 
 today <- today()
 start <- today - days_back - correction - 1
@@ -82,14 +72,22 @@ aa <- tt %>%
 pb <- readxl::read_excel("data/municipis.xlsx")
 pb$Codi <- substr(pb$Codi, 1, 5)
 
-jn <- pb %>% full_join(aa, by = c("Codi" = "municipicodi")) %>% 
-  filter(!is.na(Població)) %>% 
+# Otherwise stupid Rstudio server doesn't work - people at Rstudio are not very good at what they do...
+make_ascii <- function(x) {
+  stringi::stri_replace_all_fixed(
+    stringi::stri_trans_general(x, "latin-ascii"), " ", "_"
+  )
+}
+
+jn <- pb %>% rename_all(funs(make_ascii(names(pb)))) %>%
+  full_join(aa, by = c("Codi" = "municipicodi")) %>% 
+  filter(!is.na(Poblacio)) %>% 
   mutate(across(c(numcasos, casos_24h, rho), ~replace(., is.na(.), 0)))
 
 num_ <- 10^5
 jn <- jn %>% 
-  mutate(taxa_incidencia_14d = numcasos / Població * num_, 
-         taxa_casos_nous = casos_24h / Població * num_,
+  mutate(taxa_incidencia_14d = numcasos / Poblacio * num_, 
+         taxa_casos_nous = casos_24h / Poblacio * num_,
          epg = taxa_incidencia_14d * rho
   )
 
@@ -127,20 +125,19 @@ df$taxa_incidencia_14d <- round(df$taxa_incidencia_14d)
 df$taxa_casos_nous <- round(df$taxa_casos_nous)
 df$epg <- round(df$epg)
 
-dt_df <- df %>% select(-one_of(c("geometry", "harvard")))
-
-
-esc <- read.csv(file.path("escoles", "totcat_nivells_junts.csv"), sep = ";", dec=",", encoding = "UTF-8")
-esc$estat <- "normal"
+glink <- "https://docs.google.com/spreadsheets/d/1JWJUgxpY4z1zb1I65xc6paNRJbxU8bYJsEcH2X8pbPU"
+googledrive::drive_download(glink, type = "csv", overwrite = T)
+esc <- read.csv(file.path("totcat_nivells_junts.csv"), sep = ",", dec=".", encoding = "UTF-8")
+esc <- esc %>% rename_all(funs(make_ascii(names(esc))))
 
 wdt <- 14
 hgt <- 12
 icones_escoles <- icons(
   iconUrl = esc %>% mutate(
     icona = case_when(
-      estat == "normal" ~ "icones/escola_verda.png",
-      estat == "casos" ~ "icones/escola_taronja.png",
-      estat == "tancada" ~ "icones/escola_vermella.png",
+      Estat == "Normalitat" ~ "icones/escola_verda.png",
+      Estat == "Casos" ~ "icones/escola_taronja.png",
+      Estat == "Tancada" ~ "icones/escola_vermella.png",
       TRUE ~ "icones/escola_negra.png"
     )
   ) %>% pull(icona),
@@ -157,9 +154,25 @@ ui <- dashboardPage(
                                "Taxa de positius" = 2,
                                "Rho" = 3, 
                                "Guia de Harvard" = 4), 
-                selected = 1)
+                selected = 1),
+    checkboxGroupInput(
+      "school_status", 
+      h3("Situació escoles"),
+      choices = list(
+        "Normalitat" = 1,
+        "Casos" = 2, 
+        "Tancada" = 3,
+        "Desconnegut" = 4
+      ),
+      selected = NULL
+    ), 
+    helpText(
+      "Alerta: si cliques per veure les escoles en situació",
+      "de normalitat, pot ser que l'aplicació vagi molt lenta."
+    )
   ), 
   dashboardBody(
+    fluidRow(box(width = 12, dataTableOutput(outputId = "school_table"))),
     fluidRow(box(width = 12, leafletOutput(outputId = "mymap"))),
     fluidRow(box(width = 12, dataTableOutput(outputId = "summary_table"))),
     tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
@@ -168,8 +181,15 @@ ui <- dashboardPage(
   leafletOutput("mymap", height = 1000)
 )
 
+school_vars <- c("Denominacio.completa", "Nom.naturalesa", "Nom.municipi", "Nom.localitat", "Estat")
+mun_vars <- c("Municipi", "Comarca", "Poblacio", "numcasos", "casos_24h", 
+              "rho", "taxa_incidencia_14d", "taxa_casos_nous", "epg")
+new_names <- c("Municipi", "Comarca", "Població", "Casos 14 dies", "Casos 24h", "Rho 7 dies",
+               "Incidència 14 dies", "Taxa 24h", "Risc de rebrot")
+
 server <- function(input, output, session) {
   
+  # Colour scale based input
   col <- reactive({
     if (input$colour == 1) {
       col <- "epg"
@@ -211,6 +231,31 @@ server <- function(input, output, session) {
       stop("I don't understand the input, shithead.")
     }
   })
+  
+  # School type based input
+  clean_schools <- reactive({
+    if (is.null(input$school_status)) {
+      clean_schools <- esc[esc$Codi.centre == "1", ]
+    } else if (input$school_status == 1) {
+      clean_schools <- esc[esc$estat == "Normalitat" | esc$Codi.centre == 1, ]
+    } else if (input$school_status == 2) {
+      clean_schools <- esc[esc$estat == "Casos" | esc$Codi.centre == 1, ]
+    } else if (input$school_status == 3) {
+      clean_schools <- esc[esc$estat == "Tancada" | esc$Codi.centre == 1, ]
+    } else if (input$school_status == 4) {
+      clean_schools <- esc[!esc$estat %in% c("normal", "casos", "tancada"), ]
+    } 
+  })
+  
+  
+  # Output
+  output$school_table <- renderDataTable({
+    clean_schools()[, school_vars] %>% rename_all(funs(gsub(".", " ", school_vars, fixed = T)))
+  }, 
+  options = list(
+    pageLength = 5
+  )
+  )
 
   output$mymap <- renderLeaflet({
     leaflet() %>%
@@ -229,21 +274,23 @@ server <- function(input, output, session) {
       addLegend("bottomright", pal = pal(), values = df[[col()]],
                 title = tit(),
                 opacity = .8
+      ) %>%
+      addMarkers(as.numeric(clean_schools()$Coordenades.GEO.X),
+                 as.numeric(clean_schools()$Coordenades.GEO.Y),
+                 popup = as.character(clean_schools()$Denominacio.completa),
+                 label = as.character(clean_schools()$Denominacio.completa),
+                 icon = icones_escoles
       )
-      # addMarkers(
-      #   esc$Coordenades.GEO.X,
-      #   esc$Coordenades.GEO.Y,
-      #   popup = as.character(esc$Denominació.completa),
-      #   label = as.character(esc$Denominació.completa),
-      #   icon = icones_escoles
-      # ) 
-  })
+  }) 
   output$summary_table <- renderDataTable({
-    DT::dataTableProxy(outputId = 'tbl') %>%
-      DT::hideCols(hide = c("geometry", "harvard"))
-    df
-  }
-  )  
+    as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_names)))
+  },
+  options = list(
+    pageLength = 5
+  )
+  )
+ 
 }
 
 shinyApp(ui, server)
+
