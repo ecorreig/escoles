@@ -124,7 +124,7 @@ server <- function(input, output, session) {
       ) %>%
       setView(lat = 41.7,
               lng = 2,
-              zoom = 7) %>%
+              zoom = 8) %>%
       addPolygons(
         data = df,
         weight = 2,
