@@ -12,3 +12,4 @@ packrat/lib*/
 rsconnect
 secret.R
 *.zip
+*.Rmd
