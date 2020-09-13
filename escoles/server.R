@@ -21,7 +21,7 @@ mun_popup <- function(df) {
 }
 
 val_or_none <- function(x) {
-  ifelse(is.na(x, "--", x))
+  ifelse(is.na(x), "--", x)
 }
 
 esc_popup <- function(esc) {
@@ -30,9 +30,9 @@ esc_popup <- function(esc) {
          <p> Línies: ", val_or_none(esc$linies), "</p>
          <p> Cursos: ",  val_or_none(esc$cursos), "</p>
          <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
-         <h5> Probabilitat d'un cas en una classe: ", round(100 * df$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ", round(100 * df$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ", round(100 * df$prob_closed_school, 2), "%</p>"
+         <h5> Probabilitat d'un cas en una classe: ", round(100 * esc$prob_one_case_class, 2), "%</h5>
+         <p>Probabilitat d'un cas a l'escola: ", round(100 * esc$prob_one_case_school, 2), "%</p>
+         <p>Probabilitat escola tancada: ", round(100 * esc$prob_closed_school, 2), "%</p>"
   )
 }
 
@@ -147,7 +147,7 @@ server <- function(input, output, session) {
       addMarkers(
         as.numeric(clean_schools()$Coordenades.GEO.X),
         as.numeric(clean_schools()$Coordenades.GEO.Y),
-        popup = as.character(clean_schools()$Denominacio.completa),
+        popup = esc_popup(clean_schools()),
         label = as.character(clean_schools()$Denominacio.completa),
         icon = icones_escoles
       )
