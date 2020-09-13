@@ -31,9 +31,9 @@ ui <- dashboardPage(
     )
   ), 
   dashboardBody(
-    fluidRow(box(width = 10, dataTableOutput(outputId = "school_table"))),
-    fluidRow(box(width = 10, leafletOutput(outputId = "mymap"))),
-    fluidRow(box(width = 10, dataTableOutput(outputId = "summary_table"))),
+    fluidRow(box(width = 12, dataTableOutput(outputId = "school_table"))),
+    fluidRow(box(width = 12, leafletOutput(outputId = "mymap"))),
+    fluidRow(box(width = 12, dataTableOutput(outputId = "summary_table"))),
     tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
   ),
   

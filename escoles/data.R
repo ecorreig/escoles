@@ -1,5 +1,8 @@
 # Handle data
 
+encoding_ <- "UTF-8"
+source("utils.R", encoding = encoding_)
+
 # COVID cases
 import_covid <- function(start, end) {
   # TODO: filter by date already in the query
@@ -68,6 +71,9 @@ format_outputs <- function(df) {
   df$taxa_incidencia_14d <- round(df$taxa_incidencia_14d)
   df$taxa_casos_nous <- round(df$taxa_casos_nous)
   df$epg <- round(df$epg)
+  df$prob_one_case_class <- format_per(df$prob_one_case_class)
+  df$prob_one_case_school <- format_per(df$prob_one_case_school)
+  df$prob_closed_school <- format_per(df$prob_closed_school)
   
   df
 }

@@ -7,6 +7,7 @@ library(leaflet)
 
 encoding_ <- "UTF-8"
 source("calcs.R", encoding = encoding_)
+source("utils.R", encoding = encoding_)
 
 mun_popup <- function(df) {
   paste0("<h3>", df$Municipi, " (", df$Poblacio," habitants)</h3>  
@@ -14,14 +15,10 @@ mun_popup <- function(df) {
          <p> Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
          <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
          <p>Rho7: ", df$rho, "</p>
-         <h5> Probabilitat d'un cas en una classe: ", round(100 * df$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ", round(100 * df$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ", round(100 * df$prob_closed_school, 2), "%</p>"
+         <h5> Probabilitat d'un cas en una classe: ",  df$prob_one_case_class, "%</h5>
+         <p>Probabilitat d'un cas a l'escola: ",  df$prob_one_case_school, "%</p>
+         <p>Probabilitat escola tancada: ", df$prob_closed_school, "%</p>"
          )
-}
-
-val_or_none <- function(x) {
-  ifelse(is.na(x), "--", x)
 }
 
 esc_popup <- function(esc) {
@@ -30,9 +27,9 @@ esc_popup <- function(esc) {
          <p> Línies: ", val_or_none(esc$linies), "</p>
          <p> Cursos: ",  val_or_none(esc$cursos), "</p>
          <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
-         <h5> Probabilitat d'un cas en una classe: ", round(100 * esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ", round(100 * esc$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ", round(100 * esc$prob_closed_school, 2), "%</p>"
+         <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
+         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
+         <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
   )
 }
 

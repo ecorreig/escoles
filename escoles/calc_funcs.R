@@ -110,7 +110,7 @@ compute_epi_schools <- function(esc, df) {
                        ),
                      by = c("Codi.municipi" = "Codi")) %>% mutate(
                        prob_one_case_class = case_when(
-                         !is.na(als_per_classe) ~ prob_one_case_class(prevalence, als_per_classe),
+                         !is.na(als_per_classe) ~ prob_one_case_class(prevalence, als_per_classe) * 100,
                          TRUE ~ prob_one_case_class
                        ),
                        num_alumnes = as.integer(num_alumnes),
@@ -123,11 +123,11 @@ compute_epi_schools <- function(esc, df) {
                          TRUE ~ NA_integer_
                        ),
                        prob_one_case_school = case_when(
-                         !is.na(num_alumnes) ~ prob_one_case_school(prevalence, num_alumnes),
+                         !is.na(num_alumnes) ~ prob_one_case_school(prevalence, num_alumnes) * 100,
                          TRUE ~ prob_one_case_school
                        ),
                        prob_closed_school = case_when(
-                         !is.na(num_alumnes) ~ prob_closed_school(prevalence, num_alumnes),
+                         !is.na(num_alumnes) ~ prob_closed_school(prevalence, num_alumnes) * 100,
                          TRUE ~ prob_closed_school
                        )
                      ) 

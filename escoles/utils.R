@@ -7,3 +7,11 @@ make_ascii <- function(x) {
     stringi::stri_trans_general(x, "latin-ascii"), " ", "_"
   )
 }
+
+format_per <- function(x) {
+  round(x * 100, 2)
+}
+
+val_or_none <- function(x) {
+  ifelse(is.na(x), "--", x)
+}
