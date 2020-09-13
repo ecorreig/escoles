@@ -13,9 +13,9 @@ import_map <- function() {
 }
 
 
-wdt <- 14
-hgt <- 12
-icones_escoles <- function(esc) {
+get_icons <- function(esc) {
+  wdt <- 14
+  hgt <- 12
   icons(
     iconUrl = esc %>% mutate(
       icona = case_when(
@@ -28,4 +28,4 @@ icones_escoles <- function(esc) {
     iconWidth = wdt, iconHeight = hgt,
     iconAnchorX = wdt/2, iconAnchorY = hgt/2,
   )
-} 
+}

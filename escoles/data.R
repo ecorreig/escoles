@@ -37,12 +37,12 @@ reformat_covid <- function(wt) {
     pivot_wider(names_from = name, values_from = value)
 }
 
-get_24h_cases <- function(covid) {
-  covid[(covid$data > end - correction), c("municipicodi", "numcasos")] %>%
+get_24h_cases <- function(covid, end) {
+  covid[(covid$data > end), c("municipicodi", "numcasos")] %>%
     mutate_at("numcasos", as.numeric) %>%
     group_by(municipicodi) %>%
     summarise(across(numcasos, sum, na.rm = TRUE)) %>%
-    rename("casos_24h"= "numcasos")
+    rename("casos_24h" = "numcasos")
 }
 
 merge_covid <- function(covid, last, wt) {
@@ -73,7 +73,7 @@ format_outputs <- function(df) {
 }
 
 import_pop_data <- function() {
-  pb <- eadxl::read_excel("data/municipis.xlsx")
+  pb <- readxl::read_excel("data/municipis.xlsx")
   
   # The codes from the API have 6 digits but in here only five (good job, gene).
   # We have discovered that reoving the last number, both codes match, so that's
@@ -84,9 +84,15 @@ import_pop_data <- function() {
 }
 
 # Import school data
-import_schools <- function(glink) {
-  googledrive::drive_download(glink, type = "csv", overwrite = T)
+import_schools <- function(glink, drive) {
+  if (drive) {
+    googledrive::drive_download(glink, type = "csv", overwrite = T)
+  }
+  
   esc <- read.csv(file.path("totcat_nivells_junts.csv"), sep = ",", dec=".", encoding = "UTF-8")
-  esc <- esc %>% rename_all(funs(make_ascii(names(esc))))
+  esc %>% 
+    rename_all(funs(make_ascii(names(esc)))) %>% 
+    mutate(Codi.municipi = as.character(Codi.municipi)) %>% 
+    mutate(Codi.municipi = ifelse(nchar(Codi.municipi) < 5, paste0("0", Codi.municipi), Codi.municipi))
 }
 

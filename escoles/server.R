@@ -1,13 +1,42 @@
 # Server
 
-school_vars <- c("Denominacio.completa", "Nom.naturalesa", "Nom.municipi", "Nom.localitat", "Estat")
-mun_vars <- c("Municipi", "Comarca", "Poblacio", "numcasos", "casos_24h", 
-              "rho", "taxa_incidencia_14d", "taxa_casos_nous", "epg")
-new_names <- c("Municipi", "Comarca", "Població", "Casos 14 dies", "Casos 24h", "Rho 7 dies",
-               "Incidència 14 dies", "Taxa 24h", "Risc de rebrot")
+
+library(shiny)
+library(shinydashboard)
+library(leaflet)
+
+encoding_ <- "UTF-8"
+source("calcs.R", encoding = encoding_)
+
+mun_popup <- function(df) {
+  paste0("<h3>", df$Municipi, " (", df$Poblacio," habitants)</h3>  
+         <strong> Índex de risc: ", df$epg, "</strong> 
+         <p> Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
+         <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
+         <p>Rho7: ", df$rho, "</p>
+         <h5> Probabilitat d'un cas en una classe: ", round(100 * df$prob_one_case_class, 2), "%</h5>
+         <p>Probabilitat d'un cas a l'escola: ", round(100 * df$prob_one_case_school, 2), "%</p>
+         <p>Probabilitat escola tancada: ", round(100 * df$prob_closed_school, 2), "%</p>"
+         )
+}
+
+val_or_none <- function(x) {
+  ifelse(is.na(x, "--", x))
+}
+
+esc_popup <- function(esc) {
+  paste0("<h3>", esc$Denominacio.completa, " </h3>
+         <p> Tipologia: ", esc$Nom.naturalesa, "</p>
+         <p> Línies: ", val_or_none(esc$linies), "</p>
+         <p> Cursos: ",  val_or_none(esc$cursos), "</p>
+         <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
+         <h5> Probabilitat d'un cas en una classe: ", round(100 * df$prob_one_case_class, 2), "%</h5>
+         <p>Probabilitat d'un cas a l'escola: ", round(100 * df$prob_one_case_school, 2), "%</p>
+         <p>Probabilitat escola tancada: ", round(100 * df$prob_closed_school, 2), "%</p>"
+  )
+}
 
 server <- function(input, output, session) {
-  
   # Colour scale based input
   col <- reactive({
     if (input$colour == 1) {
@@ -25,13 +54,25 @@ server <- function(input, output, session) {
   
   pal <- reactive({
     if (input$colour == 1) {
-      pal <- colorNumeric(palette = "plasma", domain = df[["epg"]], reverse = T)
+      pal <-
+        colorNumeric(palette = "plasma",
+                     domain = df[["epg"]],
+                     reverse = T)
     } else if (input$colour == 2) {
-      pal <- colorNumeric(palette = "plasma", domain = df[["taxa_incidencia_14d"]], reverse = T)
+      pal <-
+        colorNumeric(palette = "plasma",
+                     domain = df[["taxa_incidencia_14d"]],
+                     reverse = T)
     } else if (input$colour == 3) {
-      pal <- colorNumeric(palette = "plasma", domain = df[["rho"]], reverse = T)
+      pal <-
+        colorNumeric(palette = "plasma",
+                     domain = df[["rho"]],
+                     reverse = T)
     } else if (input$colour == 4) {
-      pal <- colorFactor(palette = "RdYlGn", domain = df[["harvard"]], reverse = T)
+      pal <-
+        colorFactor(palette = "RdYlGn",
+                    domain = df[["harvard"]],
+                    reverse = T)
     } else {
       stop("I don't understand the input, shithead.")
     }
@@ -54,34 +95,39 @@ server <- function(input, output, session) {
   # School type based input
   clean_schools <- reactive({
     if (is.null(input$school_status)) {
-      clean_schools <- esc[esc$Codi.centre == "1", ]
+      clean_schools <- esc[esc$Codi.centre == "1",]
     } else if (input$school_status == 1) {
-      clean_schools <- esc[esc$estat == "Normalitat" | esc$Codi.centre == 1, ]
+      clean_schools <-
+        esc[esc$Estat == "Normalitat" | esc$Codi.centre == 1,]
     } else if (input$school_status == 2) {
-      clean_schools <- esc[esc$estat == "Casos" | esc$Codi.centre == 1, ]
+      clean_schools <- esc[esc$Estat == "Casos" | esc$Codi.centre == 1,]
     } else if (input$school_status == 3) {
-      clean_schools <- esc[esc$estat == "Tancada" | esc$Codi.centre == 1, ]
+      clean_schools <-
+        esc[esc$Estat == "Tancada" | esc$Codi.centre == 1,]
     } else if (input$school_status == 4) {
-      clean_schools <- esc[!esc$estat %in% c("normal", "casos", "tancada"), ]
-    } 
+      clean_schools <-
+        esc[!esc$Estat %in% c("normal", "casos", "tancada"),]
+    }
   })
   
   
   # Output
   output$school_table <- renderDataTable({
-    clean_schools()[, school_vars] %>% rename_all(funs(gsub(".", " ", school_vars, fixed = T)))
-  }, 
-  options = list(
-    pageLength = 5
-  )
-  )
+    as.data.frame(clean_schools())[, school_vars] %>% rename_all(funs(gsub(".", " ", school_vars, fixed = T)))
+  },
+  options = list(pageLength = 5,
+                 stateSave = TRUE))
   
   output$mymap <- renderLeaflet({
     leaflet() %>%
-      addProviderTiles(provider = providers$CartoDB.Positron,
-                       options = providerTileOptions(updateWhenZooming = FALSE,
-                                                     updateWhenIdle = TRUE)) %>%
-      setView(lat = 41.7, lng = 2, zoom = 7) %>%
+      addProviderTiles(
+        provider = providers$CartoDB.Positron,
+        options = providerTileOptions(updateWhenZooming = FALSE,
+                                      updateWhenIdle = TRUE)
+      ) %>%
+      setView(lat = 41.7,
+              lng = 2,
+              zoom = 7) %>%
       addPolygons(
         data = df,
         weight = 2,
@@ -89,24 +135,26 @@ server <- function(input, output, session) {
         fillOpacity = .7,
         color = ~ pal()(df[[col()]]),
         label = df$Municipi,
-        popup = df$Municipi) %>% 
-      addLegend("bottomright", pal = pal(), values = df[[col()]],
-                title = tit(),
-                opacity = .8
+        popup = mun_popup(df)
       ) %>%
-      addMarkers(as.numeric(clean_schools()$Coordenades.GEO.X),
-                 as.numeric(clean_schools()$Coordenades.GEO.Y),
-                 popup = as.character(clean_schools()$Denominacio.completa),
-                 label = as.character(clean_schools()$Denominacio.completa),
-                 icon = icones_escoles(esc)
+      addLegend(
+        "bottomright",
+        pal = pal(),
+        values = df[[col()]],
+        title = tit(),
+        opacity = .8
+      ) %>%
+      addMarkers(
+        as.numeric(clean_schools()$Coordenades.GEO.X),
+        as.numeric(clean_schools()$Coordenades.GEO.Y),
+        popup = as.character(clean_schools()$Denominacio.completa),
+        label = as.character(clean_schools()$Denominacio.completa),
+        icon = icones_escoles
       )
-  }) 
+  })
   output$summary_table <- renderDataTable({
     as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_names)))
   },
-  options = list(
-    pageLength = 5
-  )
-  )
+  options = list(pageLength = 5))
   
 }
