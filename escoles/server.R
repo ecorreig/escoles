@@ -23,8 +23,8 @@ mun_popup <- function(df) {
 
 esc_popup <- function(esc) {
   ifelse(!is.na(esc$num_alumnes), 
-  paste0("<h3>", esc$Denominacio.completa, " </h3>
-         <p> Tipologia: ", esc$Nom.naturalesa, "</p>
+  paste0("<h3>", esc$Denominacio.completa, " (", esc$Nom.naturalesa,") </h3>
+         <h2> Estat: ", esc$Estat, "</h2>
          <p> Línies: ", val_or_none(esc$linies), "</p>
          <p> Cursos: ",  val_or_none(esc$cursos), "</p>
          <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
@@ -33,9 +33,9 @@ esc_popup <- function(esc) {
          <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
          <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
   ),
-  paste0("<h3>", esc$Denominacio.completa, " </h3>
-         <p> Tipologia: ", esc$Nom.naturalesa, "</p>
-         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Si el saps, o saps el número de cursos, línies i alumnes per classe, si us plau entra-ho aquí a l'esquerra i actualitzarem el càlcul. Gràcies! </strong>
+  paste0("<h3>", esc$Denominacio.completa, " (", esc$Nom.naturalesa,") </h3>
+         <h2> Estat: ", esc$Estat, "</h2>
+         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Estem intentant fer-nos amb aquesta informació, esperem tenir-la aviat. Gràcies! </strong>
          <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
          <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
          <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
@@ -162,13 +162,13 @@ server <- function(input, output, session) {
         title = tit(),
         opacity = .8
       ) %>%
-      addMarkers(
+      addAwesomeMarkers(
         layerId = clean_schools()$Codi.centre,
         as.numeric(clean_schools()$Coordenades.GEO.X),
         as.numeric(clean_schools()$Coordenades.GEO.Y),
         popup = esc_popup(clean_schools()),
         label = as.character(clean_schools()$Denominacio.completa),
-        icon = icones_escoles
+        icon = get_icons(clean_schools())
       )
   })
   output$summary_table <- renderDataTable({
@@ -200,10 +200,7 @@ server <- function(input, output, session) {
         #             min = 0, max = 2000, value = 300),
         # actionButton("input_2", "Entra el valor")
         # )
-        helpText("Ara mateix no tenim els valors del número d'alumnes en aquesta escola",
-                 " per tant els valors de probabilitats que mostrem són els mateixos que",
-                 " els de tot el municipi. Estem intentant aconseguir-los i aviat ho",
-                 " actualitzarem. Gràcies!")
+        helpText("-----------------")
       })
     }
   })
