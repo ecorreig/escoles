@@ -9,47 +9,6 @@ encoding_ <- "UTF-8"
 source("calcs.R", encoding = encoding_)
 source("utils.R", encoding = encoding_)
 
-mun_popup <- function(df) {
-  paste0("<h3>", df$Municipi, " (", df$Poblacio," habitants)</h3>  
-         <strong> Índex de risc: ", df$epg, "</strong> 
-         <p> Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
-         <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
-         <p>Rho7: ", df$rho, "</p>
-         <h5> Probabilitat d'un cas en una classe: ",  df$prob_one_case_class, "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  df$prob_one_case_school, "%</p>
-         <p>Probabilitat escola tancada: ", df$prob_closed_school, "%</p>"
-         )
-}
-
-esc_popup <- function(esc) {
-  ifelse(!is.na(esc$num_alumnes), 
-  paste0("<h3>", esc$Denominacio.completa, " (", esc$Nom.naturalesa,") </h3>
-         <h2> Estat: ", esc$Estat, "</h2>
-         <p> Línies: ", val_or_none(esc$linies), "</p>
-         <p> Cursos: ",  val_or_none(esc$cursos), "</p>
-         <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
-         <strong> Num. total d'alumnes (aprox): ", val_or_none(esc$num_alumnes), "</strong>
-         <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
-  ),
-  paste0("<h3>", esc$Denominacio.completa, " (", esc$Nom.naturalesa,") </h3>
-         <h2> Estat: ", esc$Estat, "</h2>
-         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Estem intentant fer-nos amb aquesta informació, esperem tenir-la aviat. Gràcies! </strong>
-         <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
-  )
-  )
-}
-
-school_vars <- c("Denominacio.completa", "Nom.naturalesa", "Nom.municipi", "Estudis", "Estat")
-new_school_names <- c("Denominació completa", "Naturalesa", "Municipi", "Estudis*", "Estat")
-mun_vars <- c("Municipi", "Comarca", "Poblacio", "numcasos", "casos_24h", 
-              "rho", "taxa_incidencia_14d", "taxa_casos_nous", "epg")
-new_mun_names <- c("Municipi", "Comarca", "Població", "Casos 14 dies", "Casos 24h", "Rho 7 dies",
-               "Incidència 14 dies", "Taxa 24h", "Risc de rebrot")
-
 
 server <- function(input, output, session) {
   # Colour scale based input
