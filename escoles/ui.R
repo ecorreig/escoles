@@ -38,7 +38,7 @@ ui <- navbarPage(
                    "Tancada" = 3,
                    "Desconnegut" = 4
                  ),
-                 selected = NULL
+                 selected = 3
                ),
                helpText(
                  "Alerta: si cliques per veure les escoles en situació",
