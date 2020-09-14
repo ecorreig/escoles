@@ -86,3 +86,4 @@ new_mun_names <-
     "Taxa 24h",
     "Risc de rebrot"
   )
+

@@ -4,6 +4,7 @@ library(shinydashboard)
 library(shiny)
 library(leaflet)
 
+
 css <- HTML("
   .navbar-default {
     background-color: #77eb9f;
@@ -66,6 +67,6 @@ ui <- navbarPage(
              )
            )),
   tabPanel("Documentació",
-           helpText("En construcció.")),
+           uiOutput("docs")),
   tags$head(tags$style(css))
 )

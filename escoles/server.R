@@ -136,7 +136,12 @@ server <- function(input, output, session) {
   },
   options = list(pageLength = 5))
   
+  output$docs <- renderUI({
+    HTML(docs)
+  })
+  
   # Actions
+  # NOT WORKING
   observeEvent(input$mymap_marker_click, {
     event <- input$mymap_marker_click
     mis_info <- is.na(clean_schools() %>% filter(Codi.centre == event$id) %>% pull(num_alumnes))
