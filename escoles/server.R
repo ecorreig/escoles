@@ -22,16 +22,33 @@ mun_popup <- function(df) {
 }
 
 esc_popup <- function(esc) {
+  ifelse(!is.na(esc$num_alumnes), 
   paste0("<h3>", esc$Denominacio.completa, " </h3>
          <p> Tipologia: ", esc$Nom.naturalesa, "</p>
          <p> Línies: ", val_or_none(esc$linies), "</p>
          <p> Cursos: ",  val_or_none(esc$cursos), "</p>
          <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
+         <strong> Num. total d'alumnes (aprox): ", val_or_none(esc$num_alumnes), "</strong>
+         <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
+         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
+         <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
+  ),
+  paste0("<h3>", esc$Denominacio.completa, " </h3>
+         <p> Tipologia: ", esc$Nom.naturalesa, "</p>
+         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Si el saps, o saps el número de cursos, línies i alumnes per classe, si us plau entra-ho aquí a l'esquerra i actualitzarem el càlcul. Gràcies! </strong>
          <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
          <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
          <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
   )
+  )
 }
+
+school_vars <- c("Denominacio.completa", "Nom.naturalesa", "Nom.municipi", "Nom.localitat", "Estat")
+mun_vars <- c("Municipi", "Comarca", "Poblacio", "numcasos", "casos_24h", 
+              "rho", "taxa_incidencia_14d", "taxa_casos_nous", "epg")
+new_names <- c("Municipi", "Comarca", "Població", "Casos 14 dies", "Casos 24h", "Rho 7 dies",
+               "Incidència 14 dies", "Taxa 24h", "Risc de rebrot")
+
 
 server <- function(input, output, session) {
   # Colour scale based input
@@ -93,17 +110,21 @@ server <- function(input, output, session) {
   clean_schools <- reactive({
     if (is.null(input$school_status)) {
       clean_schools <- esc[esc$Codi.centre == "1",]
-    } else if (input$school_status == 1) {
-      clean_schools <-
-        esc[esc$Estat == "Normalitat" | esc$Codi.centre == 1,]
-    } else if (input$school_status == 2) {
-      clean_schools <- esc[esc$Estat == "Casos" | esc$Codi.centre == 1,]
-    } else if (input$school_status == 3) {
-      clean_schools <-
-        esc[esc$Estat == "Tancada" | esc$Codi.centre == 1,]
-    } else if (input$school_status == 4) {
-      clean_schools <-
-        esc[!esc$Estat %in% c("normal", "casos", "tancada"),]
+    } else {
+      vals <- NULL
+      if (1 %in% input$school_status) {
+        vals <- c(vals, "Normalitat")
+      }
+      if (2 %in% input$school_status) {
+        vals <- c(vals, "Casos")
+      }
+      if (3 %in% input$school_status) {
+        vals <- c(vals, "Tancada")
+      }
+      if (4 %in% input$school_status) {
+        vals <- c(vals, "Desconnegut")
+      }
+      clean_schools <- esc[esc$Estat %in% vals | esc$Codi.centre == "1",]
     }
   })
   
@@ -142,6 +163,7 @@ server <- function(input, output, session) {
         opacity = .8
       ) %>%
       addMarkers(
+        layerId = clean_schools()$Codi.centre,
         as.numeric(clean_schools()$Coordenades.GEO.X),
         as.numeric(clean_schools()$Coordenades.GEO.Y),
         popup = esc_popup(clean_schools()),
@@ -153,5 +175,35 @@ server <- function(input, output, session) {
     as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_names)))
   },
   options = list(pageLength = 5))
+  
+  # Actions
+  observeEvent(input$mymap_marker_click, {
+    event <- input$mymap_marker_click
+    mis_info <- is.na(clean_schools() %>% filter(Codi.centre == event$id) %>% pull(num_alumnes))
+    if (!is.null(event) & mis_info) {
+      print(event)
+      output$school_details <- renderUI({
+        tagList(
+        numericInput("line_num", h3("Número de línies"),
+                     value = 1),
+        numericInput("course_num", h3("Número de cursos"),
+                     value = 1),
+        numericInput("als_per_class", h3("Alumnes per classe"),
+                     value = 25),
+        submitButton("Entra els valors"),
+        helpText(
+          "Si saps la informació de l'escola durant aquest curs, podrem calcular ",
+          "de forma més acurada les probabilitats de l'escola. ",
+          "Omple els tres valors d'aquí sobre o el número total ",
+          "d'alumnes aquí sota."
+        ),
+        sliderInput("student_num", h3("Número total d'alumnes"),
+                    min = 0, max = 2000, value = 300),
+        submitButton("Entra el valor")
+        )
+      })
+    }
+  })
+
   
 }

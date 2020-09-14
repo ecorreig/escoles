@@ -42,8 +42,12 @@ ui <- navbarPage(
                ),
                helpText(
                  "Alerta: si cliques per veure les escoles en situació",
-                 "de normalitat, pot ser que l'aplicació vagi molt lenta."
-               )
+                 "de normalitat, pot ser que l'aplicació vagi lenta."
+               ),
+               #conditionalPanel("output.event" == 1,
+              uiOutput("school_details")
+             #  ),
+               
              ),
              mainPanel(
                fluidRow(box(
