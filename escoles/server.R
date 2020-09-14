@@ -43,10 +43,11 @@ esc_popup <- function(esc) {
   )
 }
 
-school_vars <- c("Denominacio.completa", "Nom.naturalesa", "Nom.municipi", "Nom.localitat", "Estat")
+school_vars <- c("Denominacio.completa", "Nom.naturalesa", "Nom.municipi", "Estudis", "Estat")
+new_school_names <- c("Denominació completa", "Naturalesa", "Municipi", "Estudis*", "Estat")
 mun_vars <- c("Municipi", "Comarca", "Poblacio", "numcasos", "casos_24h", 
               "rho", "taxa_incidencia_14d", "taxa_casos_nous", "epg")
-new_names <- c("Municipi", "Comarca", "Població", "Casos 14 dies", "Casos 24h", "Rho 7 dies",
+new_mun_names <- c("Municipi", "Comarca", "Població", "Casos 14 dies", "Casos 24h", "Rho 7 dies",
                "Incidència 14 dies", "Taxa 24h", "Risc de rebrot")
 
 
@@ -69,17 +70,17 @@ server <- function(input, output, session) {
   pal <- reactive({
     if (input$colour == 1) {
       pal <-
-        colorNumeric(palette = "plasma",
+        colorNumeric(palette = "RdYlGn",
                      domain = df[["epg"]],
                      reverse = T)
     } else if (input$colour == 2) {
       pal <-
-        colorNumeric(palette = "plasma",
+        colorNumeric(palette = "RdYlGn",
                      domain = df[["taxa_incidencia_14d"]],
                      reverse = T)
     } else if (input$colour == 3) {
       pal <-
-        colorNumeric(palette = "plasma",
+        colorNumeric(palette = "RdYlGn",
                      domain = df[["rho"]],
                      reverse = T)
     } else if (input$colour == 4) {
@@ -131,7 +132,7 @@ server <- function(input, output, session) {
   
   # Output
   output$school_table <- renderDataTable({
-    as.data.frame(clean_schools())[, school_vars] %>% rename_all(funs(gsub(".", " ", school_vars, fixed = T)))
+    as.data.frame(clean_schools())[, school_vars] %>% rename_all(funs(c(new_school_names)))
   },
   options = list(pageLength = 5,
                  stateSave = TRUE))
@@ -172,7 +173,7 @@ server <- function(input, output, session) {
       )
   })
   output$summary_table <- renderDataTable({
-    as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_names)))
+    as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_mun_names)))
   },
   options = list(pageLength = 5))
   
@@ -204,6 +205,7 @@ server <- function(input, output, session) {
       })
     }
   })
+  # Not working:
   eventReactive(T, {
     print(output)
   })

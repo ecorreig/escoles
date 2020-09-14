@@ -44,14 +44,17 @@ ui <- navbarPage(
                  "Alerta: si cliques per veure les escoles en situació",
                  "de normalitat, pot ser que l'aplicació vagi lenta."
                ),
-               #conditionalPanel("output.event" == 1,
               uiOutput("school_details")
-             #  ),
                
              ),
              mainPanel(
                fluidRow(box(
                  width = 12, dataTableOutput(outputId = "school_table")
+               )),
+               fluidRow(box(
+                 width = 12, helpText(a("*Pots trobar la significació dels codis aquí", 
+                                        href = "http://ensenyament.gencat.cat/web/.content/home/arees-actuacio/centres-serveis-educatius/centres/directoris-centres/codisnivellseducatius.pdf",
+                                        target="_blank"))
                )),
                fluidRow(box(
                  width = 12, leafletOutput(outputId = "mymap", height = 700)
@@ -63,6 +66,6 @@ ui <- navbarPage(
              )
            )),
   tabPanel("Documentació",
-           helpText("Lorem ipsum")),
+           helpText("En construcció.")),
   tags$head(tags$style(css))
 )
