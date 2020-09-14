@@ -5,15 +5,25 @@ library(shiny)
 library(leaflet)
 
 
-css <- HTML("
+css <- HTML(
+  "
   .navbar-default {
     background-color: #77eb9f;
       border-color: #E7E7E7;
-  }")
+  }
+  #img-id{
+    position: fixed;
+    right: 10px;
+    top: 5px;
+}"
+)
 
 
-ui <- navbarPage(
-  "Escoles - COVID-19",
+ui <- navbarPage(title = div(
+  div(
+    id = "img-id",
+    img(src = file.path("logo.png"), height = 40, width = 100)
+  ), "Escoles - COVID-19"),
   theme = shinythemes::shinytheme("yeti"),
   tabPanel("Principal",
            sidebarLayout(
