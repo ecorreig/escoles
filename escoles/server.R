@@ -99,7 +99,7 @@ server <- function(input, output, session) {
   output$mymap <- renderLeaflet({
     leaflet() %>%
       addProviderTiles(
-        provider = providers$CartoDB.Positron,
+        provider = providers$CartoDB.Voyager,
         options = providerTileOptions(updateWhenZooming = FALSE,
                                       updateWhenIdle = TRUE)
       ) %>%
@@ -113,7 +113,8 @@ server <- function(input, output, session) {
         fillOpacity = .7,
         color = ~ pal()(df[[col()]]),
         label = df$Municipi,
-        popup = mun_popup(df)
+        popup = mun_popup(df),
+        popupOptions = popup_options
       ) %>%
       addLegend(
         "bottomright",
@@ -127,8 +128,23 @@ server <- function(input, output, session) {
         as.numeric(clean_schools()$Coordenades.GEO.X),
         as.numeric(clean_schools()$Coordenades.GEO.Y),
         popup = esc_popup(clean_schools()),
+        popupOptions = popup_options,
         label = as.character(clean_schools()$Denominacio.completa),
         icon = get_icons(clean_schools())
+      ) %>% 
+      addMarkers(
+        lat = 41.0,
+        lng = 2.1, 
+        icon =   icons(
+          iconUrl = "icones/logo_icon.png",
+          iconWidth = 40,
+          iconHeight = 40,
+          iconAnchorX = 40 / 2,
+          iconAnchorY = 40 / 2
+        ),
+        popup = orbita_popup,
+        popupOptions = popup_options,
+        label = "Projecte Òrbita"
       )
   })
   output$summary_table <- renderDataTable({
@@ -141,56 +157,57 @@ server <- function(input, output, session) {
   })
   
   # Actions
-  # NOT WORKING
-  observeEvent(input$mymap_marker_click, {
-    event <- input$mymap_marker_click
-    mis_info <- is.na(clean_schools() %>% filter(Codi.centre == event$id) %>% pull(num_alumnes))
-    if (!is.null(event) & mis_info) {
-      output$school_details <- renderUI({
-        # tagList(
-        # numericInput("line_num", h3("Número de línies"),
-        #              value = 1),
-        # numericInput("course_num", h3("Número de cursos"),
-        #              value = 1),
-        # numericInput("als_per_class", h3("Alumnes per classe"),
-        #              value = 25),
-        # actionButton("input_1", "Entra els valors"),
-        # helpText(
-        #   "Si saps la informació de l'escola durant aquest curs, podrem calcular ",
-        #   "de forma més acurada les probabilitats de l'escola. ",
-        #   "Omple els tres valors d'aquí sobre o el número total ",
-        #   "d'alumnes aquí sota."
-        # ),
-        # sliderInput("student_num", h3("Número total d'alumnes"),
-        #             min = 0, max = 2000, value = 300),
-        # actionButton("input_2", "Entra el valor")
-        # )
-        helpText("-----------------")
-      })
-    }
-  })
-  # Not working:
-  eventReactive(T, {
-    print(output)
-  })
-  eventReactive(output.school_details.input_1, {
-    print("input 1!!")
-     
-    clean_schools() %>% 
-      filter(Codi.centre == event$id) %>% 
-      mutate(cursos = output$school_details$course_num, 
-             linies = output$school_details$line_num, 
-             als_per_classe = output$school_details$als_per_class) %>%
-      mutate(num_alumnes = cursos * linies * als_per_classe) %>% 
-      write.csv(., "escoles_2.csv", row.names = F)
-  })
-  eventReactive(output.school_details.input_2, {
-    print("input 2!!")
-    clean_schools() %>% 
-      filter(Codi.centre == event$id) %>% 
-      mutate(num_alumnes = output$school_details$student_num) %>% 
-      write.csv(., "escoles_2.csv", row.names = F)
-  })
+  # NOT WORKING -------------------------
+  
+  # observeEvent(input$mymap_marker_click, {
+  #   event <- input$mymap_marker_click
+  #   mis_info <- is.na(clean_schools() %>% filter(Codi.centre == event$id) %>% pull(num_alumnes))
+  #   if (!is.null(event) & mis_info) {
+  #     output$school_details <- renderUI({
+  #       tagList(
+  #       numericInput("line_num", h3("Número de línies"),
+  #                    value = 1),
+  #       numericInput("course_num", h3("Número de cursos"),
+  #                    value = 1),
+  #       numericInput("als_per_class", h3("Alumnes per classe"),
+  #                    value = 25),
+  #       actionButton("input_1", "Entra els valors"),
+  #       helpText(
+  #         "Si saps la informació de l'escola durant aquest curs, podrem calcular ",
+  #         "de forma més acurada les probabilitats de l'escola. ",
+  #         "Omple els tres valors d'aquí sobre o el número total ",
+  #         "d'alumnes aquí sota."
+  #       ),
+  #       sliderInput("student_num", h3("Número total d'alumnes"),
+  #                   min = 0, max = 2000, value = 300),
+  #       actionButton("input_2", "Entra el valor")
+  #       )
+  #       helpText("-----------------")
+  #     })
+  #   }
+  # })
+  # # Not working:
+  # eventReactive(T, {
+  #   print(output)
+  # })
+  # eventReactive(output.school_details.input_1, {
+  #   print("input 1!!")
+  #    
+  #   clean_schools() %>% 
+  #     filter(Codi.centre == event$id) %>% 
+  #     mutate(cursos = output$school_details$course_num, 
+  #            linies = output$school_details$line_num, 
+  #            als_per_classe = output$school_details$als_per_class) %>%
+  #     mutate(num_alumnes = cursos * linies * als_per_classe) %>% 
+  #     write.csv(., "escoles_2.csv", row.names = F)
+  # })
+  # eventReactive(output.school_details.input_2, {
+  #   print("input 2!!")
+  #   clean_schools() %>% 
+  #     filter(Codi.centre == event$id) %>% 
+  #     mutate(num_alumnes = output$school_details$student_num) %>% 
+  #     write.csv(., "escoles_2.csv", row.names = F)
+  # })
 
   
 }

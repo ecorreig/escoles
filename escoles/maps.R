@@ -32,22 +32,15 @@ get_icons_OBS <- function(esc) {
   )
 }
 
-icon_ <- "school"
-icon_set <- leaflet::awesomeIconList(
-  
-  normal = leaflet::makeAwesomeIcon(icon=icon_, markerColor = "green", iconColor = "white", library = "fa"),
-  cases = leaflet::makeAwesomeIcon(icon=icon_, markerColor = "orage", iconColor = "white", library = "fa"),
-  closed = leaflet::makeAwesomeIcon(icon=icon_, markerColor = "red", iconColor = "white", library = "fa"),
-  unknown = leaflet::makeAwesomeIcon(icon=icon_, markerColor = "black", iconColor = "white", library = "fa")
-)
-
 get_icons <- function(esc) {
-  return (
+  size <- 20
+    # Rest of icons
     leaflet::makeAwesomeIcon(
       text = fa("school"),
       iconColor = "black",
       markerColor = esc %>% mutate(
         color = case_when(
+          Codi.centre == "1" ~ "blue",
           Estat == "Normalitat" ~ "green",
           Estat == "Casos" ~ "orange",
           Estat == "Tancada" ~ "red",
@@ -55,5 +48,15 @@ get_icons <- function(esc) {
         )
       ) %>% pull(color)
     )
-  )
+ }
+
+get_icons___ <- function(esc) {
+  size <- 20
+    icons(
+      iconUrl = "icones/logo_icon.png",
+      iconWidth = size,
+      iconHeight = size,
+      iconAnchorX = size / 2,
+      iconAnchorY = size / 2
+    )
 }

@@ -50,6 +50,23 @@ esc_popup <- function(esc) {
   )
 }
 
+orbita_popup <- "
+<p> Aquest mapa ha estat creat pel<a target='_blank' class='po-popup' href=''http://projecteorbita.cat'> Projecte Òrbita</a>, un equip d'investigació i desenvolupament que elabora eines de detecció i intervenció de dificultats d'aprenentatge. </p>
+
+<p>Si us interessa el què fem i voleu que vinguem a la vostra escola a presentar el projecte, escriviu-nos a info@projecteorbita.cat. </p>
+
+<p>Esperem que us sigui d'utilitat!</p>
+<strong>Equip Òrbita </strong><br>
+<a target='_blank' href='http://projecteorbita.cat'> projecteorbita.cat </a>
+"
+
+popup_options <- popupOptions(
+  style = list(
+    "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+    "padding" = "10px"
+  )
+)
+
 school_vars <-
   c("Denominacio.completa",
     "Nom.naturalesa",

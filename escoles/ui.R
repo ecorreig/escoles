@@ -5,7 +5,7 @@ library(shiny)
 library(leaflet)
 
 
-css <- HTML(
+head_css <- HTML(
   "
   .navbar-default {
     background-color: #77eb9f;
@@ -15,9 +15,25 @@ css <- HTML(
     position: fixed;
     right: 10px;
     top: 5px;
-}"
+}
+"
 )
-
+map_css <- HTML(
+  "
+  .awesome-marker-icon-blue {
+display:none;
+}
+.awesome-marker-shadow {
+display:none;
+}
+.po-popup {
+  font-weight: bold;
+}
+.leaflet-container {
+    background-color:rgba(255,255,255,)!important;
+}
+  "
+)
 
 ui <- navbarPage(title = div(
   div(
@@ -54,8 +70,8 @@ ui <- navbarPage(title = div(
                helpText(
                  "Alerta: si cliques per veure les escoles en situació",
                  "de normalitat, pot ser que l'aplicació vagi lenta."
-               ),
-              uiOutput("school_details")
+               ) # ,
+              # uiOutput("school_details")
                
              ),
              mainPanel(
@@ -78,5 +94,6 @@ ui <- navbarPage(title = div(
            )),
   tabPanel("Documentació",
            uiOutput("docs")),
-  tags$head(tags$style(css))
+  tags$head(tags$style(head_css)),
+  tags$body(tags$style(map_css))
 )
