@@ -21,35 +21,32 @@ server <- function(input, output, session) {
       col <- "rho"
     } else if (input$colour == 4) {
       col <- "harvard"
-    } else {
-      stop("I don't understand the input, shithead.")
-    }
+    } 
   })
   
   pal <- reactive({
     if (input$colour == 1) {
       pal <-
-        colorNumeric(palette = "RdYlGn",
+        colorNumeric(palette = palette,
                      domain = df[["epg"]],
-                     reverse = T)
+                     reverse = rev)
     } else if (input$colour == 2) {
       pal <-
-        colorNumeric(palette = "RdYlGn",
+        colorNumeric(palette =palette,
                      domain = df[["taxa_incidencia_14d"]],
-                     reverse = T)
+                     reverse = rev)
     } else if (input$colour == 3) {
       pal <-
-        colorNumeric(palette = "RdYlGn",
+        colorNumeric(palette = palette,
                      domain = df[["rho"]],
-                     reverse = T)
+                     reverse = rev)
     } else if (input$colour == 4) {
       pal <-
         colorFactor(palette = "RdYlGn",
                     domain = df[["harvard"]],
                     reverse = T)
-    } else {
-      stop("I don't understand the input, shithead.")
-    }
+    } 
+    
   })
   # FIXME: this is very stupid
   tit <- reactive({
@@ -61,9 +58,7 @@ server <- function(input, output, session) {
       tit <- "Rho"
     } else if (input$colour == 4) {
       tit <- "Guia de Harvard"
-    } else {
-      stop("I don't understand the input, shithead.")
-    }
+    } 
   })
   
   # School type based input

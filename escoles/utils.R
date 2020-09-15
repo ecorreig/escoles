@@ -104,3 +104,13 @@ new_mun_names <-
     "Risc de rebrot"
   )
 
+palette <- c("#32ba1a",
+             "#64ab00",
+             "#839b00",
+             "#9b8800",
+             "#ae7400",
+             "#be5c00",
+             "#c93e00",
+             "#cf0402")
+rev <- FALSE
+
