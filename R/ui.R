@@ -41,11 +41,12 @@ display:none;
 } 
 
 ui <- function() {
-  print(getwd())
+
   navbarPage(title = div(
     div(
       id = "img-id",
-      img(src = file.path("www", "logo.png"), height = 40, width = 100)
+      img(src = "https://www.projecteorbita.cat/wp-content/uploads/2020/02/logo_orbita_700x250-2.png", 
+          height = 40, width = 100)
     ), "Escoles - COVID-19"),
     theme = shinythemes::shinytheme("yeti"),
     tabPanel("Principal",
