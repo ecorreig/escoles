@@ -1,1 +1,1 @@
-EscolesObita::launchApp()
+EscolesCovid::launchApp()
