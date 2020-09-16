@@ -1,5 +1,4 @@
 #' Maps
-#' @export
 #' 
 #' @importFrom sf st_read st_transform
 #' @import fontawesome
@@ -15,24 +14,6 @@ import_map <- function() {
   
   # Lookout, need to choose correct encoding for leaflet
   st_transform(map, "+proj=longlat +datum=WGS84")
-}
-
-
-get_icons_OBS <- function(esc) {
-  wdt <- 14
-  hgt <- 12
-  icons(
-    iconUrl = esc %>% mutate(
-      icona = case_when(
-        Estat == "Normalitat" ~ "icones/escola_verda.png",
-        Estat == "Casos" ~ "icones/escola_taronja.png",
-        Estat == "Tancada" ~ "icones/escola_vermella.png",
-        TRUE ~ "icones/escola_negra.png"
-      )
-    ) %>% pull(icona),
-    iconWidth = wdt, iconHeight = hgt,
-    iconAnchorX = wdt/2, iconAnchorY = hgt/2,
-  )
 }
 
 get_icons <- function(esc) {
@@ -53,13 +34,3 @@ get_icons <- function(esc) {
     )
  }
 
-get_icons___ <- function(esc) {
-  size <- 20
-    icons(
-      iconUrl = "icones/logo_icon.png",
-      iconWidth = size,
-      iconHeight = size,
-      iconAnchorX = size / 2,
-      iconAnchorY = size / 2
-    )
-}

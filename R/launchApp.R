@@ -4,7 +4,7 @@
 #'
 #' @return shiny application object
 #'
-#' @example \dontrun {launchApp()}
+#' @examples \dontrun {launchApp()}
 #'
 #' @import shiny
 #' @import shinydashboard
