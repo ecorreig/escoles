@@ -1,0 +1,1 @@
+EscolesObita::launchApp()

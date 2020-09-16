@@ -1,10 +1,13 @@
-# Utils
+#' Utils
+#' @importFrom stringi stri_replace_all_fixed stri_trans_general
+#' @importFrom leaflet popupOptions
+
 
 # We need to set stuff to ASCII, otherwise stupid Rstudio server doesn't work - 
 # people at Rstudio are not very good at what they do...
 make_ascii <- function(x) {
-  stringi::stri_replace_all_fixed(
-    stringi::stri_trans_general(x, "latin-ascii"), " ", "_"
+  stri_replace_all_fixed(
+    stri_trans_general(x, "latin-ascii"), " ", "_"
   )
 }
 
@@ -60,12 +63,14 @@ orbita_popup <- "
 <a target='_blank' href='http://projecteorbita.cat'> projecteorbita.cat </a>
 "
 
-popup_options <- popupOptions(
-  style = list(
-    "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-    "padding" = "10px"
+popup_options <- function() {
+  popupOptions(
+    style = list(
+      "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+      "padding" = "10px"
+    )
   )
-)
+} 
 
 school_vars <-
   c("Denominacio.completa",
@@ -104,6 +109,7 @@ new_mun_names <-
     "Risc de rebrot"
   )
 
+# from here: https://learnui.design/tools/data-color-picker.html
 palette <- c("#32ba1a",
              "#64ab00",
              "#839b00",

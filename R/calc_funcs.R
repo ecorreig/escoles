@@ -1,4 +1,5 @@
-# Math stuff
+#' Math stuff
+
 
 # Compute rho according to biocomcmoomsm (keep forgetting the name)
 # https://biocomsc.upc.edu/en/shared/avaluacio_risc.pdf

@@ -1,7 +1,11 @@
-# Handle data
+#' Handle data
 
-encoding_ <- "UTF-8"
-source("utils.R", encoding = encoding_)
+#' @importFrom googledrive drive_auth drive_download
+#' @importFrom RSocrata read.socrata
+#' @importFrom readxl read_excel
+#' @importFrom tidyr pivot_wider drop_na
+#' @import dplyr
+
 
 # COVID cases
 import_covid <- function(start, end) {
@@ -9,7 +13,7 @@ import_covid <- function(start, end) {
   p <- "https://analisi.transparenciacatalunya.cat/resource/jj6z-iyrp.json"
   q <- "?$where=resultatcoviddescripcio='Positiu PCR'"
   l <- paste0(p, q)
-  covid <- RSocrata::read.socrata(l, stringsAsFactors = F)
+  covid <- read.socrata(l, stringsAsFactors = F)
   
   covid$data <- ymd(covid$data)
   covid <- covid[(covid$data > start & covid$data < end), ]
@@ -79,7 +83,7 @@ format_outputs <- function(df) {
 }
 
 import_pop_data <- function() {
-  pb <- readxl::read_excel("data/municipis.xlsx")
+  pb <- read_excel("data/municipis.xlsx")
   
   # The codes from the API have 6 digits but in here only five (good job, gene).
   # We have discovered that reoving the last number, both codes match, so that's
@@ -91,8 +95,10 @@ import_pop_data <- function() {
 
 # Import school data
 import_schools <- function(glink, drive) {
+  
   if (drive) {
-    googledrive::drive_download(glink, type = "csv", overwrite = T)
+    drive_auth(mail, use_oob = T)
+    drive_download(glink, type = "csv", overwrite = T)
   }
   
   esc <- read.csv(file.path("totcat_nivells_junts.csv"), sep = ",", dec=".", encoding = "UTF-8")

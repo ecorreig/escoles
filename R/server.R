@@ -1,16 +1,15 @@
 # Server
 
-
-library(shiny)
-library(shinydashboard)
-library(leaflet)
-
-encoding_ <- "UTF-8"
-source("calcs.R", encoding = encoding_)
-source("utils.R", encoding = encoding_)
-
+#' @import leaflet
+#' @import shiny
+#' @import shinydashboard
 
 server <- function(input, output, session) {
+  # Get data
+  df <- get_covid_data()
+  esc <- get_school_data(df)
+  
+  
   # Colour scale based input
   col <- reactive({
     if (input$colour == 1) {
@@ -109,7 +108,7 @@ server <- function(input, output, session) {
         color = ~ pal()(df[[col()]]),
         label = df$Municipi,
         popup = mun_popup(df),
-        popupOptions = popup_options
+        popupOptions = popup_options()
       ) %>%
       addLegend(
         "bottomright",
@@ -123,7 +122,7 @@ server <- function(input, output, session) {
         as.numeric(clean_schools()$Coordenades.GEO.X),
         as.numeric(clean_schools()$Coordenades.GEO.Y),
         popup = esc_popup(clean_schools()),
-        popupOptions = popup_options,
+        popupOptions = popup_options(),
         label = as.character(clean_schools()$Denominacio.completa),
         icon = get_icons(clean_schools())
       ) %>% 
@@ -138,7 +137,7 @@ server <- function(input, output, session) {
           iconAnchorY = 40 / 2
         ),
         popup = orbita_popup,
-        popupOptions = popup_options,
+        popupOptions = popup_options(),
         label = "Projecte Òrbita"
       )
   })

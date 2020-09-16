@@ -1,6 +1,9 @@
-# Maps
+#' Maps
+#' @export
+#' 
+#' @importFrom sf st_read st_transform
+#' @import fontawesome
 
-library(fontawesome)
 
 import_map <- function() {
   # Taken from here (very nice that these maps are open source):
