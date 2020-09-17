@@ -99,7 +99,7 @@ import_pop_data <- function() {
 import_schools <- function(glink, drive) {
   
   if (drive) {
-    drive_auth(mail, use_oob = T)
+    drive_auth(mail(), use_oob = T)
     drive_download(glink, type = "csv", overwrite = T)
   }
   
