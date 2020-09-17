@@ -103,7 +103,8 @@ import_schools <- function(glink, drive) {
     drive_download(glink, type = "csv", overwrite = T)
   }
   
-  esc <- read.csv(file.path("totcat_nivells_junts.csv"), sep = ",", dec=".", encoding = "UTF-8")
+  pa_ <- system.file("extdata", "totcat_nivells_junts.csv", package = "EscolesCovid", mustWork = T)
+  esc <- read.csv(pa_, sep = ",", dec=".", encoding = "UTF-8")
   esc %>% 
     rename_all(funs(make_ascii(names(esc)))) %>% 
     mutate(Codi.municipi = as.character(Codi.municipi)) %>% 
