@@ -7,7 +7,7 @@
 import_map <- function() {
   # Taken from here (very nice that these maps are open source):
   # https://www.icgc.cat/Administracio-i-empresa/Descarregues/Capes-de-geoinformacio/Base-municipal
-  map <- st_read(system.file("extdata", "bm5mv21sh0tpm1_20200601_0.shp"))
+  map <- st_read(system.file("extdata", "bm5mv21sh0tpm1_20200601_0.shp", package = "EscolesCovid", mustWork = T))
   
   # Same as before with the codes
   map$CODIMUNI <- substr(map$CODIMUNI, 1, 5)

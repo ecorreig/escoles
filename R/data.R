@@ -83,7 +83,9 @@ format_outputs <- function(df) {
 }
 
 import_pop_data <- function() {
-  pb <- read_excel(system.file("extdata", "municipis.xlsx"))
+  path_ <- system.file("extdata", "municipis.xlsx", package = "EscolesCovid", mustWork = T)
+  print(path_)
+  pb <- read_excel(path_)
   
   # The codes from the API have 6 digits but in here only five (good job, gene).
   # We have discovered that reoving the last number, both codes match, so that's
