@@ -1,3 +1,5 @@
+language: mininmal
+
 deploy:
   provider: script
   file_glob: true
