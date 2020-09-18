@@ -4,11 +4,11 @@
 #' @import shiny
 #' @import shinydashboard
 
+
 server <- function(input, output, session) {
-  # Get data
-  df <- get_covid_data()
-  esc <- get_school_data(df)
-  
+
+  df <- .aecay.df
+  esc <- .aecay.esc
   
   # Colour scale based input
   col <- reactive({
@@ -84,13 +84,15 @@ server <- function(input, output, session) {
   
   
   # Output
-  output$school_table <- renderDataTable({
-    as.data.frame(clean_schools())[, school_vars] %>% rename_all(funs(c(new_school_names)))
-  },
+  output$school_table <- 
+    renderDataTable({
+      as.data.frame(clean_schools())[, school_vars] %>% rename_all(funs(c(new_school_names)))
+    },
   options = list(pageLength = 5,
                  stateSave = TRUE))
   
   output$mymap <- renderLeaflet({
+    withProgress(
     leaflet() %>%
       addProviderTiles(
         provider = providers$CartoDB.Voyager,
@@ -140,11 +142,14 @@ server <- function(input, output, session) {
         popupOptions = popup_options(),
         label = "Projecte Òrbita"
       )
+    )
   })
+  
   output$summary_table <- renderDataTable({
-    as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_mun_names)))
+      withProgress( as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_mun_names))))
   },
   options = list(pageLength = 5))
+  
   
   output$docs <- renderUI({
     HTML(docs)
