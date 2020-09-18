@@ -1,4 +1,4 @@
-language: mininmal
+language: generic
 
 deploy:
   provider: script
