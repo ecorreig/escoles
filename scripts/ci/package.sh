@@ -5,12 +5,6 @@ COMMIT_SUB=$(git log -1 --pretty=%s)
 COMMIT_HASH=$(git log -1 --pretty=%H)
 
 
-R CMD build EscolesCovid
-if [  $? != 0 ]; then
-    echo "Error packaging it"
-    exit -1
-fi
-
 FILE_GENERATED=$(ls -la | grep EscolesCovid | head -n 1)
 echo "$FILE_GENERATED"
 
