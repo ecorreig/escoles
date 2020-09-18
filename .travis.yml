@@ -1,10 +1,10 @@
 language: r
 
+before_install:
+  - sudo apt-get install libudunits2-dev
+
 r:
   - 4.0.2
-
-apt_packages:
-  - libudunits2-dev
 
 install:
   - R -e "install.packages('packrat')"
