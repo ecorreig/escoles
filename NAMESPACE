@@ -2,7 +2,6 @@
 
 export(launchApp)
 import(dplyr)
-import(fontawesome)
 import(leaflet)
 import(shiny)
 import(shinydashboard)

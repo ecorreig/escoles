@@ -5,7 +5,6 @@ COMMIT_SUB=$(git log -1 --pretty=%s)
 COMMIT_HASH=$(git log -1 --pretty=%H)
 
 
-R CMD install devtools
 R CMD build EscolesCovid
 if [  $? != 0 ]; then
     echo "Error packaging it"

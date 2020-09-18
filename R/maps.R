@@ -1,7 +1,6 @@
 #' Maps
 #' 
 #' @importFrom sf st_read st_transform
-#' @import fontawesome
 
 
 import_map <- function() {
@@ -20,7 +19,7 @@ get_icons <- function(esc) {
   size <- 20
     # Rest of icons
     leaflet::makeAwesomeIcon(
-      text = fa("school"),
+      icon = system.file("extdata", "school.png", package = "EscolesCovid", mustWork = T),
       iconColor = "black",
       markerColor = esc %>% mutate(
         color = case_when(
