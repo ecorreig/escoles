@@ -323,12 +323,6 @@ Source: CRAN
 Version: 0.3.1
 Hash: 9d6de5178c1cedabfb24e7d2acc9a092
 
-Package: installr
-Source: CRAN
-Version: 0.22.0
-Hash: 39c0883a55fe41a88cd4caee33c1dac7
-Requires: stringr
-
 Package: isoband
 Source: CRAN
 Version: 0.2.2
