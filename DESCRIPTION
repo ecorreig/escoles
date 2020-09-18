@@ -25,5 +25,3 @@ Imports:
     shinythemes (>= 1.1.2),
     tidyr (>= 1.1.2),
     shinycssloaders (>= 1.0.0)
-Suggests:
-    fontawesome (>= 0.1.0)
