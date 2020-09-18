@@ -4,6 +4,7 @@ COMMIT_MSG=$(git log -1 --pretty=%B)
 COMMIT_SUB=$(git log -1 --pretty=%s)
 COMMIT_HASH=$(git log -1 --pretty=%H)
 
+apt-get install libudunits2-dev
 
 R CMD build EscolesCovid
 if [  $? != 0 ]; then
