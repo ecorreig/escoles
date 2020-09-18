@@ -200,21 +200,6 @@ Source: CRAN
 Version: 1.0.1
 Hash: d272cd728e4095b3964181b44763f46c
 
-Package: fontawesome
-Source: github
-Version: 0.1.0
-Hash: 143f111a91a408acfac296733bdb4983
-Requires: htmltools
-GithubRepo: fontawesome
-GithubUsername: rstudio
-GithubRef: HEAD
-GithubSha1: 2b64e3148c9c5c70e415cdeb3e33ac3200edadbf
-RemoteHost: api.github.com
-RemoteRepo: fontawesome
-RemoteUsername: rstudio
-RemoteRef: HEAD
-RemoteSha: 2b64e3148c9c5c70e415cdeb3e33ac3200edadbf
-
 Package: fs
 Source: CRAN
 Version: 1.5.0
