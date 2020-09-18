@@ -38,8 +38,8 @@ No cal dir (però ho diem igualment, que ens coneixem) que això només són mod
 ajudar a les persones a estar informades i a prendre decisions sobre l'escolarització en aquestes circumstànies 
 tan complicades. Evidentment, molts altres factors s'han de tenir en compte a l'hora de prendre decisions.
 
-Insitim, de totes maneres, que estem completament oberts a correccions i suggerències.
+Insistim, de totes maneres, que estem completament oberts a correccions i suggerències.
 
 # Agraïments
 
-Aquest treball està inspirat en els de @_AlexArenas, @BIOCOMSC1, @JCerquidesW i @gmnzgerard. Gràcies a tots!
+Aquest treball està inspirat en els de @_AlexArenas, @BIOCOMSC1, @JCerquidesW i @gmnzgerard. Gràcies a tots i totes!

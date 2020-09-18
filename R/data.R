@@ -7,8 +7,8 @@
 #' @import dplyr
 
 
-# COVID cases
 import_covid <- function(start, end) {
+  # Import COVID cases from API
   # TODO: filter by date already in the query
   p <- "https://analisi.transparenciacatalunya.cat/resource/jj6z-iyrp.json"
   q <- "?$where=resultatcoviddescripcio='Positiu PCR'"
