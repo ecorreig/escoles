@@ -11,9 +11,6 @@ get_covid_data <- function() {
   days_back <- 14
   correction <- 3  # Data from last 3 days is no good
   
-  download_drive_file <- F
-  
-  
   today <- today()
   start <- today - days_back - correction - 1
   week <- today - 7 - correction - 1
@@ -67,8 +64,11 @@ get_covid_data <- function() {
 }
 
 get_school_data <- function(df) {
+  # FIXME:
+  download_drive_file <- F
+  
   # Import school data
-  esc <- import_schools(glink, drive = T)
+  esc <- import_schools(glink(), drive = download_drive_file)
   # Add epi data to the school dataframe for the popups
   compute_epi_schools(esc, df)
 }

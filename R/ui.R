@@ -41,13 +41,8 @@ display:none;
 } 
 
 ui <- function() {
-
-  navbarPage(title = div(
-    div(
-      id = "img-id",
-      img(src = "https://www.projecteorbita.cat/wp-content/uploads/2020/02/logo_orbita_700x250-2.png", 
-          height = 40, width = 100)
-    ), "Escoles - COVID-19"),
+  options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=.4)
+  navbarPage(title = "Escoles - COVID-19",
     theme = shinythemes::shinytheme("yeti"),
     tabPanel("Principal",
              sidebarLayout(
@@ -84,7 +79,7 @@ ui <- function() {
                ),
                mainPanel(
                  fluidRow(box(
-                   width = 12, dataTableOutput(outputId = "school_table")
+                   width = 12, shinycssloaders::withSpinner(dataTableOutput(outputId = "school_table"), type = 5)
                  )),
                  fluidRow(box(
                    width = 12, helpText(a("*Pots trobar la significació dels codis aquí", 
@@ -92,17 +87,19 @@ ui <- function() {
                                           target="_blank"))
                  )),
                  fluidRow(box(
-                   width = 12, leafletOutput(outputId = "mymap", height = 700)
+                   width = 12, shinycssloaders::withSpinner(leafletOutput(outputId = "mymap", height = 700), type = 5)
                  )),
                  fluidRow(box(
-                   width = 12, dataTableOutput(outputId = "summary_table")
+                   width = 12, shinycssloaders::withSpinner(dataTableOutput(outputId = "summary_table"), type = 5)
                  )),
                  tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
                )
              )),
     tabPanel("Documentació",
              uiOutput("docs")),
-    tags$head(tags$style(head_css())),
+    tags$head(tags$style(head_css()), 
+              tags$link(rel = "shortcut icon", 
+                        href = "https://www.projecteorbita.cat/wp-content/uploads/2020/09/logo_icon_sense_fons.png")),
     tags$body(tags$style(map_css()))
   )
 } 

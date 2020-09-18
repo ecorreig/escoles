@@ -3,7 +3,7 @@ docs <- "
 <p> Aquesta aplicació ha estat creada pel Projecte Òrbita per tal de facilitar a famílies i escoles l'accés a 
 la informació  relacionada amb l'efecte de la COVID-19 als centres educatius de Catalunya. Tota la informació 
 utilitzada és pública i està referenciada en el següent apartat del document. Tots els càlculs i models utilitzats
-també estan explicats més avall. El codi elaborat també és públici  el podeu trobar a 
+també estan explicats més avall. El codi elaborat també és públic i el podeu trobar a 
 <a href = 'https://github.com/Projecte-Orbita/escoles'target='_blank'>https://github.com/Projecte-Orbita/escoles</a>.</p>
 
 
@@ -51,7 +51,7 @@ també estan explicats més avall. El codi elaborat també és públici  el pode
 ajudar a les persones a estar informades i a prendre decisions sobre l'escolarització en aquestes circumstànies 
 tan complicades. Evidentment, molts altres factors s'han de tenir en compte a l'hora de prendre decisions.</p>
 
-<p>Insitim, de totes maneres, que estem completament oberts a correccions i suggerències.</p>
+<p>Insistim, de totes maneres, que estem completament oberts a correccions i suggerències.</p>
 
 <h1> Agraïments </h1>
 

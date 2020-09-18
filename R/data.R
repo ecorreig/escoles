@@ -7,8 +7,8 @@
 #' @import dplyr
 
 
-# COVID cases
 import_covid <- function(start, end) {
+  # Import COVID cases from API
   # TODO: filter by date already in the query
   p <- "https://analisi.transparenciacatalunya.cat/resource/jj6z-iyrp.json"
   q <- "?$where=resultatcoviddescripcio='Positiu PCR'"
@@ -99,11 +99,12 @@ import_pop_data <- function() {
 import_schools <- function(glink, drive) {
   
   if (drive) {
-    drive_auth(mail, use_oob = T)
+    drive_auth(mail(), use_oob = T)
     drive_download(glink, type = "csv", overwrite = T)
   }
   
-  esc <- read.csv(file.path("totcat_nivells_junts.csv"), sep = ",", dec=".", encoding = "UTF-8")
+  pa_ <- system.file("extdata", "totcat_nivells_junts.csv", package = "EscolesCovid", mustWork = T)
+  esc <- read.csv(pa_, sep = ",", dec=".", encoding = "UTF-8")
   esc %>% 
     rename_all(funs(make_ascii(names(esc)))) %>% 
     mutate(Codi.municipi = as.character(Codi.municipi)) %>% 
