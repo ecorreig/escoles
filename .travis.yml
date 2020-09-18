@@ -4,7 +4,7 @@ r:
   - 4.0.2
 
 install:
-  - R -e "0" --args --bootstrap-packrat
+  - R -e "install.packages('packrat')"
   - R -e "packrat::restore(restart = FALSE)"
 
 cache:
