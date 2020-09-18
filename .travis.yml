@@ -9,8 +9,9 @@ r:
 
 install:
   - R -e "install.packages('packrat')"
+  - R -e "install.packages('devtools')"
   - R -e "packrat::restore(restart = FALSE)"
-  - R -e "pkgbuild::build('EscolesCovid')"
+  - R -e "devtools::build('EscolesCovid')"
 
 cache:
   directories:
