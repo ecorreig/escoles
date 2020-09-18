@@ -12,7 +12,4 @@ shiny application object
 \description{
 launches the EscolesOrbita app
 }
-\examples{
-\dontrun {launchApp()}
-
-}
+\examples{\dontrun{launchApp()}}

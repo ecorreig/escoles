@@ -1,9 +1,9 @@
 #' Math stuff
 
 
-# Compute rho according to biocomcmoomsm (keep forgetting the name)
-# https://biocomsc.upc.edu/en/shared/avaluacio_risc.pdf
 compute_rho <- function(x) {
+  # Compute rho according to biocomcmoomsm (keep forgetting the name)
+  # https://biocomsc.upc.edu/en/shared/avaluacio_risc.pdf
   rowSums(x[, (ncol(x) - 3):ncol(x)]) / pmax(rowSums(x[, (ncol(x) - 7):(ncol(x) - 4)]), 1)
 }
 
@@ -42,21 +42,20 @@ compute_harvard <- function(x) {
   )
 }
 
-# Comute the probability of cases at schools
-# Total number of students (from here: https://www.diarimes.com/noticies/actualitat/catalunya/2019/09/04/el_curs_escolar_comencara_amb_581_534_alumnes_723_nous_mestres_professors_68117_3029.html)
-# TODO: maybe use 1331225 from http://ensenyament.gencat.cat/ca/departament/estadistiques/xifres-clau/?
-student_num <- 1581534
-students_per_class <- 20  # No one believes that but ok
-students_per_line <- 150
-school_num <- 5545
-tax_num <- 10^5
-  
-# How does covid affect children compared to adults? 
-# Number taken from here: https://www.nature.com/articles/s41591-020-0962-9
-# TODO: review, update
-ratio_covid_children <- .4
 
 compute_probs <- function(df) {
+  # How does covid affect children compared to adults? 
+  # Number taken from here: https://www.nature.com/articles/s41591-020-0962-9
+  # TODO: review, update
+  ratio_covid_children <- .4
+  
+  # Compute the probability of cases at schools
+  # Total number of students (from here: https://www.diarimes.com/noticies/actualitat/catalunya/2019/09/04/el_curs_escolar_comencara_amb_581_534_alumnes_723_nous_mestres_professors_68117_3029.html)
+  # TODO: maybe use 1331225 from http://ensenyament.gencat.cat/ca/departament/estadistiques/xifres-clau/?
+  student_num <- 1581534
+  students_per_class <- 20  # No one believes that but ok
+  school_num <- 5545
+  tax_num <- 10^5
 
   # TODO: get number of students per municipality instead of just dividing
   
@@ -73,11 +72,11 @@ compute_probs <- function(df) {
 
 # Function to compute the probability of one case
 
-prob_one_case_class <- function(prev, stud_class = students_per_class) {
+prob_one_case_class <- function(prev, stud_class = 25) {
   1 - dpois(0, stud_class * prev)
 }
 
-prob_one_case_school <- function(prev, num_students = NULL, num_lines = NULL, num_courses = NULL, stud_class = students_per_class) {
+prob_one_case_school <- function(prev, num_students = NULL, num_lines = NULL, num_courses = NULL, stud_class = 25) {
   if (is.null(num_students)) {
     1 - dpois(0, num_lines * num_courses * stud_class * prev)
   } else {
@@ -85,7 +84,7 @@ prob_one_case_school <- function(prev, num_students = NULL, num_lines = NULL, nu
   }
 }
 
-prob_closed_school <- function(prev, num_students = NULL, num_lines = NULL, num_courses = NULL, stud_class = students_per_class) {
+prob_closed_school <- function(prev, num_students = NULL, num_lines = NULL, num_courses = NULL, stud_class = 25) {
   # TODO: put this together with the previous one
   
   # In principle the school is closed after 2-3 classes are affected. We assume it's 2
