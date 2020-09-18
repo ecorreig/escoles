@@ -1,10 +1,8 @@
-language: r
-r:
-  - 4.0.2
+language: generic
 
 deploy:
   provider: script
   file_glob: true
   script: bash scripts/ci/package.sh
   on:
-    branch: develop
+    branch: master

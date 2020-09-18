@@ -25,11 +25,15 @@ compute_epi <- function(jn, num) {
 }
 
 clean_vals <- function(df) {
-  # EPG and ratio bigger than 500 is ridiculous
-  df$epg[df$epg > 500] <- 500
-  df$taxa_incidencia_14d[df$taxa_incidencia_14d > 500] <- 500
-  
-  df
+  # EPG and ratio bigger than 500 is ridiculous. TODO: think about this number. Ask maybe?
+  num_ <- 500 
+  num_rho <- 5
+  df %>% mutate(
+    clean_epg = ifelse(epg > num_, num_, epg),
+    clean_taxa_incidencia_14d = ifelse(taxa_incidencia_14d > num_, num_, taxa_incidencia_14d),
+    clean_rho = ifelse(rho > num_rho, num_rho, rho)
+  )
+
 }
 
 compute_harvard <- function(x) {
@@ -108,7 +112,7 @@ compute_epi_schools <- function(esc, df) {
                            Codi
                          
                        ),
-                     by = c("Codi.municipi" = "Codi")) %>% mutate(
+                     by = c("Codi_municipi" = "Codi")) %>% mutate(
                        prob_one_case_class = case_when(
                          !is.na(als_per_classe) ~ prob_one_case_class(prevalence, als_per_classe) * 100,
                          TRUE ~ prob_one_case_class
