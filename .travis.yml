@@ -1,5 +1,3 @@
-language: r
-
 deploy:
   provider: script
   file_glob: true
