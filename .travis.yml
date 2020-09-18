@@ -1,24 +1,5 @@
 language: r
 
-before_install:
-  - sudo apt-get install libudunits2-dev
-  - sudo apt install libgdal-dev
-
-r:
-  - 4.0.2
-
-install:
-  - R -e "install.packages('packrat')"
-  - R -e "install.packages('devtools')"
-  - R -e "packrat::restore(restart = FALSE)"
-  - R -e "devtools::build('EscolesCovid')"
-
-cache:
-  directories:
-    - $TRAVIS_BUILD_DIR/packrat/src
-    - $TRAVIS_BUILD_DIR/packrat/lib
-  packages: true
-
 deploy:
   provider: script
   file_glob: true
