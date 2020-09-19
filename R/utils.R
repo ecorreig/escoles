@@ -33,7 +33,7 @@ mun_popup <- function(df) {
 
 esc_popup <- function(esc) {
   ifelse(!is.na(esc$num_alumnes), 
-         paste0("<h3>", esc$Denominacio.completa, " (", esc$Nom.naturalesa,") </h3>
+         paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
          <h2> Estat: ", esc$Estat, "</h2>
          <p> Línies: ", val_or_none(esc$linies), "</p>
          <p> Cursos: ",  val_or_none(esc$cursos), "</p>
@@ -43,9 +43,9 @@ esc_popup <- function(esc) {
          <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
          <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
          ),
-         paste0("<h3>", esc$Denominacio.completa, " (", esc$Nom.naturalesa,") </h3>
+         paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
          <h2> Estat: ", esc$Estat, "</h2>
-         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Estem intentant fer-nos amb aquesta informació, esperem tenir-la aviat. Gràcies! </strong>
+         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Estem intentant aconseguir aquesta informació, esperem tenir-la aviat. Gràcies! </strong>
          <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
          <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
          <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
@@ -54,7 +54,9 @@ esc_popup <- function(esc) {
 }
 
 orbita_popup <- "
-<p> Aquest mapa ha estat creat pel<a target='_blank' class='po-popup' href=''http://projecteorbita.cat'> Projecte Òrbita</a>, un equip d'investigació i desenvolupament que elabora eines de detecció i intervenció de dificultats d'aprenentatge. </p>
+<p> Aquest mapa ha estat creat pel<a target='_blank' class='po-popup' href=''http://projecteorbita.cat'> Projecte Òrbita</a>, un equip d'investigació i desenvolupament que elabora eines de detecció de necessitats específiques d'aprenentatge. </p>
+
+<p> Aquest curs us oferim un seguiment continu de l'alumnat de la vostra escola, posant especial èmfasi en les vessats emocional i adaptatives, a més de la cognitiva, perquè pugueu fer un seguiment continu de l'estat d'ànim, la inclusió i l'aprenentatge dels infants i adolescents del vostre centre educatiu.</p>
 
 <p>Si us interessa el què fem i voleu que vinguem a la vostra escola a presentar el projecte, escriviu-nos a info@projecteorbita.cat. </p>
 
@@ -73,14 +75,14 @@ popup_options <- function() {
 } 
 
 school_vars <-
-  c("Denominacio.completa",
-    "Nom.naturalesa",
-    "Nom.municipi",
+  c("Denominacio_completa",
+    "Nom_naturalesa",
+    "Nom_municipi",
     "Estudis",
     "Estat")
 new_school_names <-
-  c("Denominació completa",
-    "Naturalesa",
+  c("Nom",
+    "Titularitat",
     "Municipi",
     "Estudis*",
     "Estat")
@@ -110,13 +112,33 @@ new_mun_names <-
   )
 
 # from here: https://learnui.design/tools/data-color-picker.html
-palette <- c("#32ba1a",
-             "#64ab00",
-             "#839b00",
-             "#9b8800",
-             "#ae7400",
-             "#be5c00",
-             "#c93e00",
-             "#cf0402")
+palette <- c(
+  "#32ba1a",
+  "#64ab00",
+  "#839b00",
+  "#9b8800",
+  "#ae7400",
+  "#be5c00",
+  "#c93e00",
+  "#cf0402",
+  "#cf0402",
+  "#fc0502",
+  "#fc0502",
+  "#cd003d",
+  "#cd003d",
+  "#8b004d",
+  "#8b004d",
+  "#460a41",
+  "#460a41",
+  "#12011f"
+)
+
 rev <- FALSE
 
+correct_num <- function(col, num) {
+  if (!is.factor(col)) {
+    col
+  } else {
+    ifelse(col < num, col, num)
+  }
+}

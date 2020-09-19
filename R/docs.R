@@ -1,21 +1,21 @@
 docs <- "
 <h1> Introducció </h1>
-<p> Aquesta aplicació ha estat creada pel Projecte Òrbita per tal de facilitar a famílies i escoles l'accés a 
+<p> Aquesta aplicació ha estat creada pel Projecte Òrbita per tal de facilitar a famílies i centres educatius l'accés a 
 la informació  relacionada amb l'efecte de la COVID-19 als centres educatius de Catalunya. Tota la informació 
 utilitzada és pública i està referenciada en el següent apartat del document. Tots els càlculs i models utilitzats
 també estan explicats més avall. El codi elaborat també és públic i el podeu trobar a 
-<a href = 'https://github.com/Projecte-Orbita/escoles'target='_blank'>https://github.com/Projecte-Orbita/escoles</a>.</p>
+<a href = 'https://github.com/Projecte-Orbita/escoles' target='_blank'>https://github.com/Projecte-Orbita/escoles</a>.</p>
 
 
 <h1> Dades </h1>
 
 <p>Les dades provenen de les fonts següents: </p>
 
-<ul>- Casos COVID-19: https://analisi.transparenciacatalunya.cat/ (document jj6z-iyrp).</ul>
-<ul>- Demografia: https://www.idescat.cat/pub/?id=aec&n=925 (compte que els codis de municipi tenen una xifra més que els de casos COVID; és la última, que es pot treure i aleshores coincideixen).</ul>
-<ul>- Dades escoles globals: https://www.idescat.cat/pub/?id=aec&n=734.</ul>
-<ul>- Dades escoles individuals: http://ensenyament.gencat.cat/ca/arees-actuacio/centres-serveis-educatius/centres/directoris-centres/ (primer fitxer).</ul>
-<ul>- Mapes: https://www.icgc.cat/Administracio-i-empresa/Descarregues/Capes-de-geoinformacio/Base-municipal.</ul>
+<ul>- Casos COVID-19: <a href = 'https://analisi.transparenciacatalunya.cat/' target='_blank'>https://analisi.transparenciacatalunya.cat/ </a> (document jj6z-iyrp).</ul>
+<ul>- Demografia: <a href = 'https://www.idescat.cat/pub/?id=aec&n=925' target='_blank'>https://www.idescat.cat/pub/?id=aec&n=925</a>  (compte que els codis de municipi tenen una xifra més que els de casos COVID; és la última, que es pot treure i aleshores coincideixen).</ul>
+<ul>- Dades centres educatius globals: <a href = 'https://www.idescat.cat/pub/?id=aec&n=734' target='_blank'>https://www.idescat.cat/pub/?id=aec&n=734</a>.</ul>
+<ul>- Dades centres educatius individuals: <a href = 'http://ensenyament.gencat.cat/ca/arees-actuacio/centres-serveis-educatius/centres/directoris-centres/' target='_blank'>http://ensenyament.gencat.cat/ca/arees-actuacio/centres-serveis-educatius/centres/directoris-centres/</a> (primer fitxer).</ul>
+<ul>- Mapes: <a href = 'https://www.icgc.cat/Administracio-i-empresa/Descarregues/Capes-de-geoinformacio/Base-municipal' target='_blank'>https://www.icgc.cat/Administracio-i-empresa/Descarregues/Capes-de-geoinformacio/Base-municipal</a>.</ul>
 
 <h1> Càlculs </h1>
 
@@ -27,9 +27,9 @@ també estan explicats més avall. El codi elaborat també és públic i el pode
 
 <p> Pel que fa als càlculs de probabilitats de casos, s'han utilitzat models de Poisson amb lambda igual a la prevalença de la malaltia a 14 dies. </p>
 
-<strong>Nota: seguint aquest article (https://www.nature.com/articles/s41591-020-0962-9) s'ha tingut en compte que els infants i adolescents tenen una incidència de la malaltia d'aproximadament el 40% que els adults. Aquest valor segurament vagi actualitzant-se a mesura que surten més investigacions.</strong>
+<strong>Nota: seguint aquest <a href = 'https://www.nature.com/articles/s41591-020-0962-9' target='_blank'>article</a> s'ha tingut en compte que els infants i adolescents tenen una incidència de la malaltia d'aproximadament el 40% que els adults. Aquest valor segurament vagi actualitzant-se a mesura que surten més investigacions.</strong>
 
-<p> Els valors de la guia de Harvard els podeu trobar aquí: https://globalepidemics.org/wp-content/uploads/2020/07/pandemic_resilient_schools_briefing_72020.pdf. </p>
+<p> Els valors de la guia de Harvard els podeu trobar <a href = 'https://www.nature.com/articles/s41591-020-0962-9' target='_blank'>aquí</a>.</p>
 
 <p> La resta de càlculs són bastant directes; si els voleu repassar, són als fitxers calcs.R i calc_funcs.R. </p>
 
@@ -51,11 +51,13 @@ també estan explicats més avall. El codi elaborat també és públic i el pode
 ajudar a les persones a estar informades i a prendre decisions sobre l'escolarització en aquestes circumstànies 
 tan complicades. Evidentment, molts altres factors s'han de tenir en compte a l'hora de prendre decisions.</p>
 
+<p> Afegim també que nosaltres no som epidemiòlogs, així que ens limitem a reproduir els càlculs de @BIOCOMSC1 i afegir càlculs de probabilitats trivials.</p>
+
 <p>Insistim, de totes maneres, que estem completament oberts a correccions i suggerències.</p>
 
 <h1> Agraïments </h1>
 
-<p>Aquest treball està inspirat en els de @_AlexArenas, @BIOCOMSC1, @JCerquidesW i @gmnzgerard. Gràcies a tots!</p>
+<p>Aquest treball està inspirat en els de @_AlexArenas, @BIOCOMSC1, @JCerquidesW i @gmnzgerard. Gràcies a tots i totes!</p>
 
 
 "

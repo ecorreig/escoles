@@ -85,7 +85,6 @@ format_outputs <- function(df) {
 
 import_pop_data <- function() {
   path_ <- system.file("extdata", "municipis.xlsx", package = "EscolesCovid", mustWork = T)
-  print(path_)
   pb <- read_excel(path_)
   
   # The codes from the API have 6 digits but in here only five (good job, gene).
@@ -99,20 +98,19 @@ import_pop_data <- function() {
 # Import school data
 import_schools <- function() {
   
-  pa_ <- system.file("extdata", "totcat_nivells_junts.csv", package = "EscolesCovid", mustWork = T)
+  pa_ <- system.file("extdata", "escoles.xlsx", package = "EscolesCovid", mustWork = T)
 
-  esc <- read.csv(pa_, sep = ",", dec=".", encoding = "UTF-8")
-  esc %>% 
-    rename_all(funs(make_ascii(names(esc)))) %>% 
-    mutate(Codi.municipi = as.character(Codi.municipi)) %>% 
-    mutate(Codi.municipi = ifelse(nchar(Codi.municipi) < 5, paste0("0", Codi.municipi), Codi.municipi))
+  esc <- readxl::read_xlsx(pa_, sheet = 1)
+  esc %>%  rename_all(funs(make_ascii(names(esc)))) %>% 
+    mutate(Codi_municipi = as.character(Codi_municipi)) %>% 
+    mutate(Codi_municipi = ifelse(nchar(Codi_municipi) < 5, paste0("0", Codi_municipi), Codi_municipi))
 }
 
 update_schools <- function() {
   # Warning: only run locally
   source("R/secret.R", encoding = "UTF-8")
   
-  pa_ <- system.file("extdata", "totcat_nivells_junts.csv", package = "EscolesCovid", mustWork = T)
+  pa_ <- system.file("extdata", package = "EscolesCovid", mustWork = T)
   drive_auth(mail(), use_oob = T)
-  drive_download(glink(), path = pa_, type = "csv", overwrite = T)
+  drive_download(glink(), path = file.path(pa_, "escoles.xlsx"), type = "xlsx", overwrite = T)
 }

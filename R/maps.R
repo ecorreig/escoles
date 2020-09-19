@@ -25,9 +25,9 @@ get_icons <- function(esc) {
     iconColor = "black",
     markerColor = esc %>% mutate(
       color = case_when(
-        Codi.centre == "1" ~ "blue",
+        Codi_centre == "1" ~ "blue",
         Estat == "Normalitat" ~ "green",
-        Estat == "Casos" ~ "orange",
+        Estat == "Grups en quarantena" ~ "orange",
         Estat == "Tancada" ~ "red",
         TRUE ~ "black"
       )
