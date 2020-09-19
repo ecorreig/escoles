@@ -26,8 +26,7 @@ mun_popup <- function(df) {
          <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
          <p>Rho7: ", df$rho, "</p>
          <h5> Probabilitat d'un cas en una classe: ",  df$prob_one_case_class, "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  df$prob_one_case_school, "%</p>
-         <p>Probabilitat escola tancada: ", df$prob_closed_school, "%</p>"
+         <p>Probabilitat d'un cas a l'escola: ",  df$prob_one_case_school, "%</p>"
   )
 }
 
@@ -40,15 +39,13 @@ esc_popup <- function(esc) {
          <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
          <strong> Num. total d'alumnes (aprox): ", val_or_none(esc$num_alumnes), "</strong>
          <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
+         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>"
          ),
          paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
          <h2> Estat: ", esc$Estat, "</h2>
          <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Estem intentant aconseguir aquesta informació, esperem tenir-la aviat. Gràcies! </strong>
          <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>
-         <p>Probabilitat escola tancada: ",  round(esc$prob_closed_school, 2), "%</p>"
+         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>"
          )
   )
 }
