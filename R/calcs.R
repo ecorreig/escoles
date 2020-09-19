@@ -64,11 +64,9 @@ get_covid_data <- function() {
 }
 
 get_school_data <- function(df) {
-  # FIXME:
-  download_drive_file <- F
-  
+
   # Import school data
-  esc <- import_schools(glink(), drive = download_drive_file)
+  esc <- import_schools()
   # Add epi data to the school dataframe for the popups
   compute_epi_schools(esc, df)
 }

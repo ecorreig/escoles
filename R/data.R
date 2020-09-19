@@ -5,6 +5,7 @@
 #' @importFrom readxl read_excel
 #' @importFrom tidyr pivot_wider drop_na
 #' @import dplyr
+#' @export update_schools
 
 
 import_covid <- function(start, end) {
@@ -96,14 +97,10 @@ import_pop_data <- function() {
 }
 
 # Import school data
-import_schools <- function(glink, drive) {
-  
-  if (drive) {
-    drive_auth(mail(), use_oob = T)
-    drive_download(glink, type = "csv", overwrite = T)
-  }
+import_schools <- function() {
   
   pa_ <- system.file("extdata", "totcat_nivells_junts.csv", package = "EscolesCovid", mustWork = T)
+
   esc <- read.csv(pa_, sep = ",", dec=".", encoding = "UTF-8")
   esc %>% 
     rename_all(funs(make_ascii(names(esc)))) %>% 
@@ -111,3 +108,11 @@ import_schools <- function(glink, drive) {
     mutate(Codi.municipi = ifelse(nchar(Codi.municipi) < 5, paste0("0", Codi.municipi), Codi.municipi))
 }
 
+update_schools <- function() {
+  # Warning: only run locally
+  source("R/secret.R", encoding = "UTF-8")
+  
+  pa_ <- system.file("extdata", "totcat_nivells_junts.csv", package = "EscolesCovid", mustWork = T)
+  drive_auth(mail(), use_oob = T)
+  drive_download(glink(), path = pa_, type = "csv", overwrite = T)
+}
