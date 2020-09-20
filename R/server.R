@@ -9,68 +9,68 @@ server <- function(input, output, session) {
 
   df <- .aecay.df
   esc <- .aecay.esc
-  
+
   # Colour scale based input
   col <- reactive({
     if (input$colour == 1) {
-      col <- "epg"
+      col <- "clean_epg"
     } else if (input$colour == 2) {
-      col <- "taxa_incidencia_14d"
+      col <- "clean_taxa_incidencia_14d"
     } else if (input$colour == 3) {
-      col <- "rho"
+      col <- "clean_rho"
     } else if (input$colour == 4) {
       col <- "harvard"
-    } 
+    }
   })
-  
+
   pal <- reactive({
     if (input$colour == 1) {
       pal <-
         colorNumeric(palette = palette,
-                     domain = df[["epg"]],
+                     domain = df[["clean_epg"]],
                      reverse = rev)
     } else if (input$colour == 2) {
       pal <-
-        colorNumeric(palette =palette,
-                     domain = df[["taxa_incidencia_14d"]],
+        colorNumeric(palette = palette,
+                     domain = df[["clean_taxa_incidencia_14d"]],
                      reverse = rev)
     } else if (input$colour == 3) {
       pal <-
         colorNumeric(palette = palette,
-                     domain = df[["rho"]],
+                     domain = df[["clean_rho"]],
                      reverse = rev)
     } else if (input$colour == 4) {
       pal <-
         colorFactor(palette = "RdYlGn",
                     domain = df[["harvard"]],
                     reverse = T)
-    } 
-    
+    }
+
   })
   # FIXME: this is very stupid
   tit <- reactive({
     if (input$colour == 1) {
-      tit <- "Risc de rebrot"
+      tit <- "Risc de rebrot*"
     } else if (input$colour == 2) {
-      tit <- "Taxa de positius"
+      tit <- "Taxa de positius*"
     } else if (input$colour == 3) {
-      tit <- "Rho"
+      tit <- "Rho*"
     } else if (input$colour == 4) {
       tit <- "Guia de Harvard"
-    } 
+    }
   })
-  
+
   # School type based input
   clean_schools <- reactive({
     if (is.null(input$school_status)) {
-      clean_schools <- esc[esc$Codi.centre == "1",]
+      clean_schools <- esc[esc$Codi_centre == "1",]
     } else {
       vals <- NULL
       if (1 %in% input$school_status) {
         vals <- c(vals, "Normalitat")
       }
       if (2 %in% input$school_status) {
-        vals <- c(vals, "Casos")
+        vals <- c(vals, "Grups en quarantena")
       }
       if (3 %in% input$school_status) {
         vals <- c(vals, "Tancada")
@@ -78,19 +78,12 @@ server <- function(input, output, session) {
       if (4 %in% input$school_status) {
         vals <- c(vals, "Desconnegut")
       }
-      clean_schools <- esc[esc$Estat %in% vals | esc$Codi.centre == "1",]
+      clean_schools <- esc[esc$Estat %in% vals,]
     }
   })
-  
-  
+
+
   # Output
-  output$school_table <- 
-    renderDataTable({
-      as.data.frame(clean_schools())[, school_vars] %>% rename_all(funs(c(new_school_names)))
-    },
-  options = list(pageLength = 5,
-                 stateSave = TRUE))
-  
   output$mymap <- renderLeaflet({
     withProgress(
     leaflet() %>%
@@ -120,17 +113,17 @@ server <- function(input, output, session) {
         opacity = .8
       ) %>%
       addAwesomeMarkers(
-        layerId = clean_schools()$Codi.centre,
-        as.numeric(clean_schools()$Coordenades.GEO.X),
-        as.numeric(clean_schools()$Coordenades.GEO.Y),
+        layerId = clean_schools()$Codi_centre,
+        as.numeric(clean_schools()$Coordenades_GEO_X),
+        as.numeric(clean_schools()$Coordenades_GEO_Y),
         popup = esc_popup(clean_schools()),
         popupOptions = popup_options(),
-        label = as.character(clean_schools()$Denominacio.completa),
+        label = as.character(clean_schools()$Denominacio_completa),
         icon = get_icons(clean_schools())
-      ) %>% 
+      ) %>%
       addMarkers(
         lat = 41.0,
-        lng = 2.1, 
+        lng = 2.1,
         icon =   icons(
           iconUrl = system.file("extdata", "logo_icon.png", package = "EscolesCovid", mustWork = T),
           iconWidth = 40,
@@ -144,20 +137,32 @@ server <- function(input, output, session) {
       )
     )
   })
-  
+  output$school_table <-
+    renderDataTable({
+      as.data.frame(clean_schools())[, school_vars] %>%
+        rename_all(funs(c(new_school_names)))
+    },   options = list(pageLength = 5,
+                        stateSave = TRUE))
+
   output$summary_table <- renderDataTable({
-      withProgress( as.data.frame(df)[, mun_vars] %>% rename_all(funs(c(new_mun_names))))
+      withProgress( as.data.frame(df)[, mun_vars] %>%
+                      arrange(desc(epg)) %>%
+                      rename_all(funs(c(new_mun_names))))
+
   },
   options = list(pageLength = 5))
-  
-  
+
+
   output$docs <- renderUI({
     HTML(docs)
   })
-  
+  output$quisom <- renderUI({
+    HTML(orbita_popup)
+  })
+
   # Actions
   # NOT WORKING -------------------------
-  
+
   # observeEvent(input$mymap_marker_click, {
   #   event <- input$mymap_marker_click
   #   mis_info <- is.na(clean_schools() %>% filter(Codi.centre == event$id) %>% pull(num_alumnes))
@@ -191,22 +196,22 @@ server <- function(input, output, session) {
   # })
   # eventReactive(output.school_details.input_1, {
   #   print("input 1!!")
-  #    
-  #   clean_schools() %>% 
-  #     filter(Codi.centre == event$id) %>% 
-  #     mutate(cursos = output$school_details$course_num, 
-  #            linies = output$school_details$line_num, 
+  #
+  #   clean_schools() %>%
+  #     filter(Codi.centre == event$id) %>%
+  #     mutate(cursos = output$school_details$course_num,
+  #            linies = output$school_details$line_num,
   #            als_per_classe = output$school_details$als_per_class) %>%
-  #     mutate(num_alumnes = cursos * linies * als_per_classe) %>% 
+  #     mutate(num_alumnes = cursos * linies * als_per_classe) %>%
   #     write.csv(., "escoles_2.csv", row.names = F)
   # })
   # eventReactive(output.school_details.input_2, {
   #   print("input 2!!")
-  #   clean_schools() %>% 
-  #     filter(Codi.centre == event$id) %>% 
-  #     mutate(num_alumnes = output$school_details$student_num) %>% 
+  #   clean_schools() %>%
+  #     filter(Codi.centre == event$id) %>%
+  #     mutate(num_alumnes = output$school_details$student_num) %>%
   #     write.csv(., "escoles_2.csv", row.names = F)
   # })
 
-  
+
 }

@@ -1,9 +1,8 @@
 .Rhistory
 .Rprofile
 reobertura escoles.Rproj
-packrat
 rsconnect
 secret.R
 desktop.ini
 .Rproj.user
-packrat/lib*/
+packrat
