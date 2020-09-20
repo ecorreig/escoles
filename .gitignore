@@ -5,4 +5,4 @@ rsconnect
 secret.R
 desktop.ini
 .Rproj.user
-packrat/lib*/
+packrat
