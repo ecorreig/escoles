@@ -65,10 +65,6 @@ get_covid_data <- function() {
 
 get_school_data <- function(df) {
 
-  # Update school data
-  # Only in local! FIXME
-  update_schools()
-
   # Import school data
   esc <- import_schools()
   # Add epi data to the school dataframe for the popups
