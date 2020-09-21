@@ -110,7 +110,7 @@ update_schools <- function() {
   # Warning: only run locally
   source("R/secret.R", encoding = "UTF-8")
 
-  pa_ <- system.file("extdata", package = "EscolesCovid", mustWork = T)
+  pa_ <- file.path(getwd(), "inst", "extdata")
   drive_auth(mail(), use_oob = T)
   drive_download(glink(), path = file.path(pa_, "escoles.xlsx"), type = "xlsx", overwrite = T)
 }
