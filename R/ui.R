@@ -50,7 +50,7 @@ ui <- function() {
                  width = 3,
                  selectInput(
                    "colour",
-                   h3("Indicador epidemiològic"),
+                   h3("Indicador epidemiològic*"),
                    choices = list(
                      "Risc de rebrot" = 1,
                      "Taxa de positius" = 2,
@@ -58,6 +58,9 @@ ui <- function() {
                      "Guia de Harvard" = 4
                    ),
                    selected = 1
+                 ),
+                 helpText(
+                   "*Pots trobar definicions dels indicadors epidemiològics a la pestanya 'Documentació'."
                  ),
                  checkboxGroupInput(
                    "school_status",
@@ -106,6 +109,7 @@ ui <- function() {
     tabPanel("Qui som",
              uiOutput("quisom")),
     tags$head(tags$style(head_css()),
+              HTML(analytics_tag()),
               tags$link(rel = "shortcut icon",
                         href = "https://www.projecteorbita.cat/wp-content/uploads/2020/09/logo_icon_sense_fons.png")),
     tags$body(tags$style(map_css()))

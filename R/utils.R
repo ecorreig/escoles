@@ -139,3 +139,17 @@ correct_num <- function(col, num) {
     ifelse(col < num, col, num)
   }
 }
+
+analytics_tag <- function() {
+"
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=UA-158198403-2'></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-158198403-2');
+</script>
+"
+}
