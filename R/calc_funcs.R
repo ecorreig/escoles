@@ -65,7 +65,7 @@ compute_probs <- function(df) {
   
   df %>% mutate(
     students_with_covid = Poblacio / sum(Poblacio) * student_num * taxa_incidencia_14d / tax_num * ratio_covid_children,
-    prevalence = numcasos / Poblacio,
+    prevalence = numcasos / Poblacio * ratio_covid_children,
     prob_one_case_class = prob_one_case_class(prevalence, students_per_class),
     prob_one_case_school = prob_one_case_school(prevalence, num_students = student_num / school_num),
     prob_closed_school = prob_closed_school(prevalence, num_students = student_num / school_num)
