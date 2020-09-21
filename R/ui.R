@@ -105,9 +105,8 @@ ui <- function() {
                )
              )),
     tabPanel("Documentació",
-             uiOutput("docs")),
-    tabPanel("Qui som",
-             uiOutput("quisom")),
+             fluidRow(column(width = 2, ""), column(width = 8, uiOutput("docs")), column(width = 2, ""))),
+    tabPanel("Qui som", fluidRow(column(width = 2, ""), column(width = 8, uiOutput("quisom")), column(width = 2, ""))),
     tags$head(tags$style(head_css()),
               HTML(analytics_tag()),
               tags$link(rel = "shortcut icon",

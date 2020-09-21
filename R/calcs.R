@@ -52,7 +52,7 @@ get_covid_data <- function() {
   df <- clean_vals(df)
 
   # Compute values of Hardvard guidelines
-  df$harvard <- compute_harvard(df$casos_24h)
+  df$harvard <- compute_harvard(df$taxa_casos_nous)
 
   # Compute several other indicators
   # TODO: put together
