@@ -67,7 +67,7 @@ ui <- function() {
                    h3("Situació centres educatius"),
                    choices = list(
                      "Normalitat" = 1,
-                     "Casos" = 2,
+                     "Grups en quarentena" = 2,
                      "Tancada" = 3,
                      "Desconnegut" = 4
                    ),
