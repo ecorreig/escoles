@@ -109,7 +109,7 @@ ui <- function() {
     tabPanel("Qui som",
              uiOutput("quisom")),
     tags$head(tags$style(head_css()),
-              # HTML(analytics_tag()),
+              HTML(analytics_tag()),
               tags$link(rel = "shortcut icon",
                         href = "https://www.projecteorbita.cat/wp-content/uploads/2020/09/logo_icon_sense_fons.png")),
     tags$body(tags$style(map_css()))
