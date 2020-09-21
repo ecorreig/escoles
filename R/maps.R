@@ -12,7 +12,7 @@ import_map <- function() {
   map$CODIMUNI <- substr(map$CODIMUNI, 1, 5)
   
   # Lookout, need to choose correct encoding for leaflet
-  st_transform(map, "+proj=longlat +datum=WGS84")
+  rmapshaper::ms_simplify(st_transform(map, "+proj=longlat +datum=WGS84"))
 }
 
 get_icons <- function(esc) {
