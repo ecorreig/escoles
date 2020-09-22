@@ -76,13 +76,17 @@ school_vars <-
     "Nom_naturalesa",
     "Nom_municipi",
     "Estudis",
-    "Estat")
+    "Estat", 
+    "prob_one_case_class", 
+    "prob_one_case_school")
 new_school_names <-
   c("Nom",
     "Titularitat",
     "Municipi",
     "Estudis*",
-    "Estat")
+    "Estat", 
+    "Prob. cas classe", 
+    "Prob. cas escola")
 mun_vars <-
   c(
     "Municipi",

@@ -51,13 +51,14 @@ compute_probs <- function(df) {
   # How does covid affect children compared to adults? 
   # Number taken from here: https://www.nature.com/articles/s41591-020-0962-9
   # TODO: review, update
-  ratio_covid_children <- .4
+  # Update: This is not so in adolescents; where it's 1, we put it to .6 but needs review
+  ratio_covid_children <- .6
   
   # Compute the probability of cases at schools
   # Total number of students (from here: https://www.diarimes.com/noticies/actualitat/catalunya/2019/09/04/el_curs_escolar_comencara_amb_581_534_alumnes_723_nous_mestres_professors_68117_3029.html)
   # TODO: maybe use 1331225 from http://ensenyament.gencat.cat/ca/departament/estadistiques/xifres-clau/?
   student_num <- 1581534
-  students_per_class <- 20  # No one believes that but ok
+  students_per_class <- 25  # No one believes that but ok
   school_num <- 5545
   tax_num <- 10^5
 
@@ -73,10 +74,8 @@ compute_probs <- function(df) {
 
 }
 
-
-# Function to compute the probability of one case
-
 prob_one_case_class <- function(prev, stud_class = 25) {
+  # Function to compute the probability of one case
   1 - dpois(0, stud_class * prev)
 }
 
