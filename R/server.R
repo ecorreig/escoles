@@ -86,7 +86,7 @@ server <- function(input, output, session) {
   # Output
   output$mymap <- renderLeaflet({
     withProgress(
-    leaflet() %>%
+    leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
       addProviderTiles(
         provider = providers$CartoDB.Voyager,
         options = providerTileOptions(updateWhenZooming = FALSE,
