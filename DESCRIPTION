@@ -1,7 +1,7 @@
 Package: EscolesCovid
 Type: Package
 Title: Shiny App to explore COVID-19 effect on catalan schools
-Version: 0.1.1
+Version: 0.1.2
 Author: Projecte Òrbita <info@projecteorbita.cat>
 Maintainer: Eudald Correig <eudald@projecteorbita.cat>
 Description: Display a map of the municipalities in Catalonia along all the education centers and plot the pandemic effect in all of them, providing various epidemic indicators along with case probability computations.
