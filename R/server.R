@@ -113,6 +113,7 @@ server <- function(input, output, session) {
         opacity = .8
       ) %>%
       addAwesomeMarkers(
+        clusterOptions = markerClusterOptions(disableClusteringAtZoom=11),
         layerId = clean_schools()$Codi_centre,
         as.numeric(clean_schools()$Coordenades_GEO_X),
         as.numeric(clean_schools()$Coordenades_GEO_Y),
