@@ -78,13 +78,17 @@ server <- function(input, output, session) {
       if (4 %in% input$school_status) {
         vals <- c(vals, "Desconnegut")
       }
-      clean_schools <- esc[esc$Estat %in% vals,]
+      clean_schools <- esc[esc$Estat %in% vals | esc$Codi_centre == "1",]
     }
   })
 
 
   # Output
   output$mymap <- renderLeaflet({
+    
+    norm_esc <- clean_schools()[clean_schools()$Estat == "Normalitat"  | clean_schools()$Codi_centre == "1", ]
+    alt_esc <- clean_schools()[clean_schools()$Estat != "Normalitat"  | clean_schools()$Codi_centre == "1", ]
+    
     withProgress(
     leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
       addProviderTiles(
@@ -113,14 +117,31 @@ server <- function(input, output, session) {
         opacity = .8
       ) %>%
       addAwesomeMarkers(
-        clusterOptions = markerClusterOptions(disableClusteringAtZoom=11),
-        layerId = clean_schools()$Codi_centre,
-        as.numeric(clean_schools()$Coordenades_GEO_X),
-        as.numeric(clean_schools()$Coordenades_GEO_Y),
-        popup = esc_popup(clean_schools()),
+        clusterOptions = markerClusterOptions(
+          disableClusteringAtZoom=12,
+          iconCreateFunction=JS("function (cluster) {    
+    var childCount = cluster.getChildCount(); 
+    var c = ' marker-cluster-custom';  
+    return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+
+  }")
+          ),
+        layerId = norm_esc$Codi_centre,
+        as.numeric(norm_esc$Coordenades_GEO_X),
+        as.numeric(norm_esc$Coordenades_GEO_Y),
+        popup = esc_popup(norm_esc),
         popupOptions = popup_options(),
-        label = as.character(clean_schools()$Denominacio_completa),
-        icon = get_icons(clean_schools())
+        label = as.character(norm_esc$Denominacio_completa),
+        icon = get_icons(norm_esc)
+      ) %>%
+      addAwesomeMarkers(
+        layerId = alt_esc$Codi_centre,
+        as.numeric(alt_esc$Coordenades_GEO_X),
+        as.numeric(alt_esc$Coordenades_GEO_Y),
+        popup = esc_popup(alt_esc),
+        popupOptions = popup_options(),
+        label = as.character(alt_esc$Denominacio_completa),
+        icon = get_icons(alt_esc)
       ) %>%
       addMarkers(
         lat = 41.0,
@@ -140,7 +161,12 @@ server <- function(input, output, session) {
   })
   output$school_table <-
     renderDataTable({
-      as.data.frame(clean_schools())[, school_vars] %>%
+      
+      # remove PÒ
+      if (nrow(clean_schools()) > 1) {
+        temp <- clean_schools()[clean_schools()$Codi_centre != "1", ]
+      }
+      as.data.frame(temp)[, school_vars] %>%
         rename_all(funs(c(new_school_names)))
     },   options = list(pageLength = 5,
                         stateSave = TRUE))
