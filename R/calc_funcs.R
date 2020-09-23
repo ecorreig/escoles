@@ -98,9 +98,44 @@ prob_closed_school <- function(prev, num_students = NULL, num_lines = NULL, num_
   }
 }
 
+get_course_size <- function(code) {
+  default_course_size = 2
+  course_sizes <- list(
+    "EINF1C" = 3,
+    "EINF2C" = 3,
+    "EPRI" = 6,
+    "ESO" = 4
+    # assume the rest is 2 (TODO: update this)
+  )
+  
+  if (code %in% names(course_sizes)) {
+    return(course_sizes[[code]])
+  } else {
+    return(default_course_size)
+  }
+}
+
+get_school_courses <- function(x) {
+  code <- strsplit(x, " ", fixed = T)[[1]]
+  tot <- 0
+  for (cod in code) {
+    tot <- tot + get_course_size(cod)
+  }
+  as.integer(tot)
+}
+
+get_school_size <- function(codes) {
+  sapply(codes, get_school_courses)
+}
+
 
 compute_epi_schools <- function(esc, df) {
   # TODO: clean this
+  
+  default_line_num <- as.integer(2)
+  default_als_per_classe <- as.integer(25)
+  
+  
   cols_ <- c("cursos", "linies", "als_per_classe")
   esc %>% left_join(as.data.frame(df) %>%
                        select(
@@ -112,17 +147,26 @@ compute_epi_schools <- function(esc, df) {
                          
                        ),
                      by = c("Codi_municipi" = "Codi")) %>% mutate(
+                       als_per_classe = case_when(
+                         !is.na(als_per_classe) ~ as.integer(als_per_classe),
+                         TRUE ~ default_als_per_classe
+                       ),
                        prob_one_case_class = case_when(
                          !is.na(als_per_classe) ~ prob_one_case_class(prevalence, als_per_classe) * 100,
                          TRUE ~ prob_one_case_class
                        ),
                        num_alumnes = as.integer(num_alumnes),
-                       cursos = as.integer(cursos),
-                       linies = as.integer(linies),
-                       als_per_classe = as.integer(als_per_classe),
+                       cursos = case_when(
+                         !is.na(cursos) ~ as.integer(cursos),
+                         TRUE ~ get_school_size(Estudis)
+                       ),
+                       linies = case_when(
+                         !is.na(linies) ~ as.integer(linies),
+                         TRUE ~ default_line_num
+                       ) ,
                        num_alumnes = case_when(
                          !is.na(num_alumnes) ~ num_alumnes,
-                         complete.cases(esc %>% select(cursos, linies, als_per_classe)) ~ cursos * linies * als_per_classe,
+                         complete.cases(cursos, linies, als_per_classe) ~ cursos * linies * als_per_classe,
                          TRUE ~ NA_integer_
                        ),
                        prob_one_case_school = case_when(
