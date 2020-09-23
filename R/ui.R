@@ -36,6 +36,9 @@ display:none;
 .leaflet-container {
     background-color:rgba(255,255,255,)!important;
 }
+.marker-cluster-custom {
+  background-color: rgba(50, 186, 26, 1);
+}
   "
   )
 }
