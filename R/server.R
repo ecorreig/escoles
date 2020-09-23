@@ -172,9 +172,11 @@ server <- function(input, output, session) {
                         stateSave = TRUE))
 
   output$summary_table <- renderDataTable({
-      withProgress( as.data.frame(df)[, mun_vars] %>%
-                      arrange(desc(epg)) %>%
-                      rename_all(funs(c(new_mun_names))))
+      withProgress(
+        as.data.frame(df)[, mun_vars] %>%
+          arrange(desc(epg)) %>%
+          rename_all(funs(c(new_mun_names)))
+      ) 
 
   },
   options = list(pageLength = 5))
@@ -186,6 +188,34 @@ server <- function(input, output, session) {
   output$quisom <- renderUI({
     HTML(orbita_popup)
   })
+  
+  # Actions
+  
+  # val <- reactiveVal()
+  # 
+  # observeEvent(input$school_table_rows_selected, {
+  #   row_selected = qSub()[input$table01_rows_selected,]
+  #   proxy <- leafletProxy('map01')
+  #   print(row_selected)
+  #   proxy %>%
+  #     addAwesomeMarkers(popup=as.character(row_selected$mag),
+  #                       layerId = as.character(row_selected$id),
+  #                       lng=row_selected$long, 
+  #                       lat=row_selected$lat,
+  #                       icon = my_icon)
+  #   
+  #   # Reset previously selected marker
+  #   if(!is.null(prev_row()))
+  #   {
+  #     proxy %>%
+  #       addMarkers(popup=as.character(prev_row()$mag), 
+  #                  layerId = as.character(prev_row()$id),
+  #                  lng=prev_row()$long, 
+  #                  lat=prev_row()$lat)
+  #   }
+  #   # set new value to reactiveVal 
+  #   prev_row(row_selected)
+  # })
 
   # Actions
   # NOT WORKING -------------------------
