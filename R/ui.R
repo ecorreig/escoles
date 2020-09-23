@@ -74,7 +74,7 @@ ui <- function() {
                      "Tancada" = 3,
                      "Desconnegut" = 4
                    ),
-                   selected = c(2, 3)
+                   selected = 1:3
                  ),
                  helpText(
                    "Alerta: si cliques per veure els centres educatius en situació",
