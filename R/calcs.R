@@ -1,9 +1,3 @@
-# Do all the computations and generate nice dataframes
-
-#' @importFrom lubridate today ymd
-#' @importFrom dplyr %>%
-#' @importFrom sf st_as_sf
-
 
 get_covid_data <- function() {
   # Settings

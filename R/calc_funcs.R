@@ -1,5 +1,3 @@
-#' Math stuff
-
 
 compute_rho <- function(x) {
   # Compute rho according to biocomcmoomsm (keep forgetting the name)
@@ -188,5 +186,17 @@ compute_percentages <- function(df, esc) {
     summarise(n = n(), infected = infected(Grups_en_quarantena)) %>%
     select(Codi_municipi, n, infected) %>%
     right_join(df, by = c("Codi_municipi" = "Codi")))
+}
+
+# Evolution
+
+get_evo <- function(evo) {
+  import_evo() %>% 
+    mutate(
+      `Casos alumnes` = round(zoo::na.approx(`Casos alumnes`)),
+      `Alumnes confinats` = round(zoo::na.approx(`Alumnes confinats`)),
+      `Casos professionals` = round(zoo::na.approx(`Casos professionals`)),
+      `Professionals confinats` = round(zoo::na.approx(`Professionals confinats`))
+    )
 }
 

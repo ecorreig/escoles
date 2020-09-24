@@ -1,3 +1,4 @@
+
 import_covid <- function(start, end) {
   # Import COVID cases from API
   # TODO: filter by date already in the query
@@ -103,4 +104,11 @@ update_schools <- function() {
   pa_ <- file.path(getwd(), "data")
   drive_auth(mail(), use_oob = T)
   drive_download(glink(), path = file.path(pa_, "escoles.xlsx"), type = "xlsx", overwrite = T)
+}
+
+# evo
+
+import_evo <- function() {
+  pa_ <- system.file("extdata", "evo.xlsx", package = "EscolesCovid", mustWork = T)
+  readxl::read_xlsx(pa_, sheet = 1)
 }

@@ -12,8 +12,7 @@ library(shinythemes)
 library(tidyr)
 library(shinycssloaders)
 library(rmapshaper)
-
-print("Done loading packages.")
+library(plotly)
 
 launchApp <- function (wd) {
 
@@ -24,23 +23,32 @@ launchApp <- function (wd) {
   }
 
   # Get data
-  temp <- get_covid_data()
-
+  df <- get_covid_data()
+  esc <- get_school_data(df)
+  df <- compute_percentages(df, esc)
+  evo <- get_evo()
+  
   # Init stuff
   globalObjects = ls(.GlobalEnv)
   if(".aecay.df" %in%  globalObjects){
-    oldDataset = .GlobalEnv$.aecay.df
+    oldDataset1 = .GlobalEnv$.aecay.df
   }
-
-  .GlobalEnv$.aecay.df = temp
-
+  .GlobalEnv$.aecay.df <- df
+  
   globalObjects = ls(.GlobalEnv)
   if(".aecay.esc" %in%  globalObjects){
-    oldDataset = .GlobalEnv$.aecay.esc
+    oldDataset2 = .GlobalEnv$.aecay.esc
   }
-
-  .GlobalEnv$.aecay.esc = get_school_data(temp)
+  .GlobalEnv$.aecay.esc <- esc
+  
+  globalObjects = ls(.GlobalEnv)
+  if(".aecay.esc" %in%  globalObjects){
+    oldDataset2 = .GlobalEnv$.aecay.esc
+  }
+  .GlobalEnv$.aecay.evo <- evo
 
   # Run
   shinyApp(ui = ui(), server = server)
 }
+
+launchApp(".")
