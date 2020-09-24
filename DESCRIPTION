@@ -25,4 +25,6 @@ Imports:
     shinythemes (>= 1.1.2),
     tidyr (>= 1.1.2),
     shinycssloaders (>= 1.0.0),
-    rmapshaper (>= 0.4.4)
+    rmapshaper (>= 0.4.4),
+    plotly (>= 4.7.1)
+    zoo (>= 1.8-8)

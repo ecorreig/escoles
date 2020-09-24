@@ -114,3 +114,10 @@ update_schools <- function() {
   drive_auth(mail(), use_oob = T)
   drive_download(glink(), path = file.path(pa_, "escoles.xlsx"), type = "xlsx", overwrite = T)
 }
+
+# evo
+
+import_evo <- function() {
+  pa_ <- system.file("extdata", "evo.xlsx", package = "EscolesCovid", mustWork = T)
+  readxl::read_xlsx(pa_, sheet = 1)
+}

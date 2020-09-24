@@ -4,6 +4,7 @@
 #' @import shinydashboard
 #' @import shiny
 #' @importFrom shinythemes shinytheme
+#' @importFrom plotly plotlyOutput
 
 
 head_css <- function() {
@@ -50,7 +51,7 @@ ui <- function() {
     tabPanel("Principal",
              sidebarLayout(
                sidebarPanel(
-                 width = 3,
+                 width = 4,
                  selectInput(
                    "colour",
                    h3("Indicador epidemiològic*"),
@@ -79,8 +80,11 @@ ui <- function() {
                  helpText(
                    "Alerta: si cliques per veure els centres educatius en situació",
                    "de normalitat, pot ser que l'aplicació vagi lenta."
-                 ) # ,
-                 # uiOutput("school_details")
+                 ),
+                 h3("Evolució"),
+                 plotlyOutput(outputId = "evo1"),
+                 plotlyOutput(outputId = "evo2"),
+                 helpText("*CEs = Centres educatius")
 
                ),
                mainPanel(

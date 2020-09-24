@@ -190,3 +190,15 @@ compute_percentages <- function(df, esc) {
     right_join(df, by = c("Codi_municipi" = "Codi")))
 }
 
+# Evolution
+
+get_evo <- function(evo) {
+  import_evo() %>% 
+    mutate(
+      `Casos alumnes` = round(zoo::na.approx(`Casos alumnes`)),
+      `Alumnes confinats` = round(zoo::na.approx(`Alumnes confinats`)),
+      `Casos professionals` = round(zoo::na.approx(`Casos professionals`)),
+      `Professionals confinats` = round(zoo::na.approx(`Professionals confinats`))
+    )
+}
+

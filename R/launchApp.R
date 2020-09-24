@@ -16,6 +16,7 @@ launchApp <- function() {
   df <- get_covid_data()
   esc <- get_school_data(df)
   df <- compute_percentages(df, esc)
+  evo <- get_evo()
   
   # Init stuff
   globalObjects = ls(.GlobalEnv)
@@ -29,6 +30,12 @@ launchApp <- function() {
     oldDataset2 = .GlobalEnv$.aecay.esc
   }
   .GlobalEnv$.aecay.esc <- esc
+  
+  globalObjects = ls(.GlobalEnv)
+  if(".aecay.esc" %in%  globalObjects){
+    oldDataset2 = .GlobalEnv$.aecay.evo
+  }
+  .GlobalEnv$.aecay.evo <- evo
 
   
   # Run
