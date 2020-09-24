@@ -149,7 +149,7 @@ server <- function(input, output, session) {
         lat = 41.0,
         lng = 2.1,
         icon =   icons(
-          iconUrl = system.file("extdata", "logo_icon.png", package = "EscolesCovid", mustWork = T),
+          iconUrl = file.path(getwd(), "icons", "logo_icon.png"),
           iconWidth = 40,
           iconHeight = 40,
           iconAnchorX = 40 / 2,

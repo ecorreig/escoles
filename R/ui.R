@@ -1,10 +1,11 @@
-# UI
-
-#' @import leaflet
-#' @import shinydashboard
-#' @import shiny
-#' @importFrom shinythemes shinytheme
-#' @importFrom plotly plotlyOutput
+tryCatch(
+  {
+    source(file.path("R", "utils.R"), encoding = "UTF-8")
+    },
+  error = function(cond) {
+    source(file.path("utils.R"), encoding = "UTF-8")
+  }
+)
 
 
 head_css <- function() {

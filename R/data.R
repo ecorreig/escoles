@@ -1,13 +1,3 @@
-#' Handle data
-
-#' @importFrom googledrive drive_auth drive_download
-#' @importFrom RSocrata read.socrata
-#' @importFrom readxl read_excel
-#' @importFrom tidyr pivot_wider drop_na
-#' @import dplyr
-#' @export update_schools
-
-
 import_covid <- function(start, end) {
   # Import COVID cases from API
   # TODO: filter by date already in the query
@@ -84,7 +74,7 @@ format_outputs <- function(df) {
 }
 
 import_pop_data <- function() {
-  path_ <- system.file("extdata", "municipis.xlsx", package = "EscolesCovid", mustWork = T)
+  path_ <- file.path(getwd(), "data", "municipis.xlsx")
   pb <- read_excel(path_)
 
   # The codes from the API have 6 digits but in here only five (good job, gene).
@@ -98,7 +88,7 @@ import_pop_data <- function() {
 # Import school data
 import_schools <- function() {
 
-  pa_ <- system.file("extdata", "escoles.xlsx", package = "EscolesCovid", mustWork = T)
+  pa_ <- file.path(getwd(), "data", "escoles.xlsx")
 
   esc <- readxl::read_xlsx(pa_, sheet = 1)
   esc %>%  rename_all(funs(make_ascii(names(esc)))) %>%
@@ -110,7 +100,7 @@ update_schools <- function() {
   # Warning: only run locally
   source("R/secret.R", encoding = "UTF-8")
 
-  pa_ <- file.path(getwd(), "inst", "extdata")
+  pa_ <- file.path(getwd(), "data")
   drive_auth(mail(), use_oob = T)
   drive_download(glink(), path = file.path(pa_, "escoles.xlsx"), type = "xlsx", overwrite = T)
 }
