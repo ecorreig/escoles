@@ -20,7 +20,11 @@ val_or_none <- function(x) {
 }
 
 mun_popup <- function(df) {
-  per_q <- paste0(round(df$infected / df$n * 100, 2), "% (", df$infected, "/", df$n, ")")
+  per_q <- ifelse(
+    !is.na(df$n), 
+    paste0(round(df$infected / df$n * 100, 2), "% (", df$infected, "/", df$n, ")"), 
+    "Cap centre educatiu"
+  )  
   paste0("<h3>", df$Municipi, " (", df$Poblacio," habitants)</h3>  
          <strong> Índex de risc: ", df$epg, "</strong> 
          <p> Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
