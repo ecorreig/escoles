@@ -173,7 +173,9 @@ server <- function(input, output, session) {
 
   output$summary_table <- renderDataTable({
       withProgress(
-        as.data.frame(df)[, mun_vars] %>%
+        as.data.frame(df %>% 
+        mutate(per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")"))) %>%
+          select(all_of(mun_vars)) %>%
           arrange(desc(epg)) %>%
           rename_all(funs(c(new_mun_names)))
       ) 

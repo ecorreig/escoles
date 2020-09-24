@@ -181,4 +181,12 @@ compute_epi_schools <- function(esc, df) {
 }
 
 
+compute_percentages <- function(df, esc) {
+  infected <- function(x) sum(x > 0)
+  st_as_sf(esc %>% 
+    group_by(Codi_municipi) %>%
+    summarise(n = n(), infected = infected(Grups_en_quarantena)) %>%
+    select(Codi_municipi, n, infected) %>%
+    right_join(df, by = c("Codi_municipi" = "Codi")))
+}
 

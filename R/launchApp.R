@@ -13,23 +13,23 @@
 launchApp <- function() {
   
   # Get data
-  temp <- get_covid_data()
+  df <- get_covid_data()
+  esc <- get_school_data(df)
+  df <- compute_percentages(df, esc)
   
   # Init stuff
   globalObjects = ls(.GlobalEnv)
   if(".aecay.df" %in%  globalObjects){
-    oldDataset = .GlobalEnv$.aecay.df
+    oldDataset1 = .GlobalEnv$.aecay.df
   }
-  
-  .GlobalEnv$.aecay.df = temp
+  .GlobalEnv$.aecay.df <- df
   
   globalObjects = ls(.GlobalEnv)
   if(".aecay.esc" %in%  globalObjects){
-    oldDataset = .GlobalEnv$.aecay.esc
+    oldDataset2 = .GlobalEnv$.aecay.esc
   }
-  
-  .GlobalEnv$.aecay.esc = get_school_data(temp)
-  
+  .GlobalEnv$.aecay.esc <- esc
+
   
   # Run
   shinyApp(ui = ui(), server = server)

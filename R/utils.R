@@ -20,34 +20,29 @@ val_or_none <- function(x) {
 }
 
 mun_popup <- function(df) {
+  per_q <- paste0(round(df$infected / df$n * 100, 2), "% (", df$infected, "/", df$n, ")")
   paste0("<h3>", df$Municipi, " (", df$Poblacio," habitants)</h3>  
          <strong> Índex de risc: ", df$epg, "</strong> 
          <p> Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
          <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
          <p>Rho7: ", df$rho, "</p>
+         <p>Percentatge escoles amb grups en quarantena: ", per_q, "</p>
          <h5> Probabilitat d'un cas en una classe: ",  df$prob_one_case_class, "%</h5>
          <p>Probabilitat d'un cas a l'escola: ",  df$prob_one_case_school, "%</p>"
   )
 }
 
 esc_popup <- function(esc) {
-  ifelse(!is.na(esc$num_alumnes), 
          paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
          <h2> Estat: ", esc$Estat, "</h2>
-         <p> Línies: ", val_or_none(esc$linies), "</p>
-         <p> Cursos: ",  val_or_none(esc$cursos), "</p>
-         <p> Alumnes per classe: ",  val_or_none(esc$als_per_classe), "</p>
-         <strong> Num. total d'alumnes (aprox): ", val_or_none(esc$num_alumnes), "</strong>
-         <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>"
-         ),
-         paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
-         <h2> Estat: ", esc$Estat, "</h2>
-         <strong> No tenim el número total d'alumnes d'aquesta escola, per tant els càlculs són molt aproximats. Estem intentant aconseguir aquesta informació, esperem tenir-la aviat. Gràcies! </strong>
+         <p> Grups en quarantena: ", esc$Grups_en_quarantena, "</p>
+         <p> Alummnes en quarantena: ", esc$ALUMN_CONFIN, "</p>
+         <p> Personal en quarantena: ", esc$DOCENT_CONFIN + esc$ALTRES_CONFIN, "</p>
+         <p> Alumnes positius: ", esc$ALUMN_POSITIU, "</p>
+         <p> Personal positiu: ", esc$PERSONAL_POSITIU + esc$ALTRES_POSITIU, "</p>
          <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
          <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>"
          )
-  )
 }
 
 orbita_popup <- "
@@ -97,7 +92,8 @@ mun_vars <-
     "rho",
     "taxa_incidencia_14d",
     "taxa_casos_nous",
-    "epg"
+    "epg",
+    "per_quarantena"
   )
 new_mun_names <-
   c(
@@ -109,7 +105,8 @@ new_mun_names <-
     "Rho 7 dies",
     "Incidència 14 dies",
     "Taxa 24h",
-    "Risc de rebrot"
+    "Risc de rebrot",
+    "% escoles amb quarantenes"
   )
 
 # from here: https://learnui.design/tools/data-color-picker.html
