@@ -1,3 +1,4 @@
+
 import_covid <- function(start, end) {
   # Import COVID cases from API
   # TODO: filter by date already in the query

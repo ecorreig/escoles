@@ -1,5 +1,3 @@
-#' Math stuff
-
 
 compute_rho <- function(x) {
   # Compute rho according to biocomcmoomsm (keep forgetting the name)

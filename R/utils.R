@@ -1,7 +1,3 @@
-#' Utils
-#' @importFrom stringi stri_replace_all_fixed stri_trans_general
-#' @importFrom leaflet popupOptions
-
 
 make_ascii <- function(x) {
   # We need to set stuff to ASCII, otherwise stupid Rstudio server doesn't work - 
