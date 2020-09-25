@@ -39,8 +39,11 @@ display:none;
 .leaflet-container {
     background-color:rgba(255,255,255,)!important;
 }
-.marker-cluster-custom {
+.marker-cluster-custom-green {
   background-color: rgba(50, 186, 26, 1);
+}
+.marker-cluster-custom-orange {
+  background-color: rgba(255,165,0, 1);
 }
 .leaflet-popup-content {
     line-height: 1;

@@ -102,8 +102,12 @@ server <- function(input, output, session) {
   # Output
   output$mymap <- renderLeaflet({
     
-    norm_esc <- clean_schools()[clean_schools()$Estat == "Normalitat"  | clean_schools()$Codi_centre == "1", ]
-    alt_esc <- clean_schools()[clean_schools()$Estat != "Normalitat"  | clean_schools()$Codi_centre == "1", ]
+    orb <- clean_schools()$Codi_centre == "1"
+    norm <- clean_schools()$Estat == "Normalitat"
+    q <- clean_schools()$Estat == "Grups en quarantena"
+    norm_esc <- clean_schools()[norm | orb, ]
+    q_esc <- clean_schools()[q | orb, ]
+    t_esc <- clean_schools()[which(!(norm | q | orb)), ]
     
     withProgress(
     leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
@@ -134,10 +138,10 @@ server <- function(input, output, session) {
       ) %>%
       addAwesomeMarkers(
         clusterOptions = markerClusterOptions(
-          disableClusteringAtZoom=12,
+          disableClusteringAtZoom=13,
           iconCreateFunction=JS("function (cluster) {    
     var childCount = cluster.getChildCount(); 
-    var c = ' marker-cluster-custom';  
+    var c = ' marker-cluster-custom-green';  
     return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
 
   }")
@@ -151,13 +155,30 @@ server <- function(input, output, session) {
         icon = get_icons(norm_esc)
       ) %>%
       addAwesomeMarkers(
-        layerId = as.character(alt_esc$Codi_centre),
-        as.numeric(alt_esc$Coordenades_GEO_X),
-        as.numeric(alt_esc$Coordenades_GEO_Y),
-        popup = esc_popup(alt_esc),
+        clusterOptions = markerClusterOptions(
+          disableClusteringAtZoom=13,
+          iconCreateFunction=JS("function (cluster) {    
+    var childCount = cluster.getChildCount(); 
+    var c = ' marker-cluster-custom-orange';  
+    return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+
+  }")),
+        layerId = as.character(q_esc$Codi_centre),
+        as.numeric(q_esc$Coordenades_GEO_X),
+        as.numeric(q_esc$Coordenades_GEO_Y),
+        popup = esc_popup(q_esc),
         popupOptions = popup_options(),
-        label = as.character(alt_esc$Denominacio_completa),
-        icon = get_icons(alt_esc)
+        label = as.character(q_esc$Denominacio_completa),
+        icon = get_icons(q_esc)
+      ) %>%
+      addAwesomeMarkers(
+        layerId = as.character(t_esc$Codi_centre),
+        as.numeric(t_esc$Coordenades_GEO_X),
+        as.numeric(t_esc$Coordenades_GEO_Y),
+        popup = esc_popup(t_esc),
+        popupOptions = popup_options(),
+        label = as.character(t_esc$Denominacio_completa),
+        icon = get_icons(t_esc)
       ) %>%
       addMarkers(
         lat = 41.0,
@@ -279,7 +300,7 @@ server <- function(input, output, session) {
     proxy %>%
       setView(lng=x,
               lat=y + .05,
-              zoom = 12) %>%
+              zoom = 9) %>%
       addPopups(layerId = as.character(row_selected$Codi_municipi),
                 lng=x,
                 lat=y,
