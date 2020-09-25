@@ -238,28 +238,28 @@ server <- function(input, output, session) {
   # Actions
   
   # Schools
-  prev_school <- reactiveVal()
+  prev_vals <- reactiveValues()
 
   observeEvent(input$school_table_rows_selected, {
     row_selected = clean_schools()[input$school_table_rows_selected,]
     proxy <- leafletProxy('mymap')
     proxy %>% 
       setView(lng=row_selected$Coordenades_GEO_X, 
-              lat=row_selected$Coordenades_GEO_Y, 
+              lat=row_selected$Coordenades_GEO_Y + .05, # so that the popup is correctly displayed, 
               zoom = 12) %>%
       addPopups(layerId = as.character(row_selected$Codi_centre),
         lng=row_selected$Coordenades_GEO_X, 
-                lat=row_selected$Coordenades_GEO_Y + .1, # so that the popup is correctly displayed
+                lat=row_selected$Coordenades_GEO_Y,
                 popup = esc_popup(row_selected), 
                 options = popup_options())
         
-    if(!is.null(prev_school()))
+    if(!is.null(prev_vals))
     {
       proxy %>% 
-        removePopup(layerId = as.character(prev_school()$Codi_centre))
+        removePopup(layerId = as.character(prev_vals$school$Codi_centre))
     }
     # set new value to reactiveVal 
-    prev_school(row_selected)
+    prev_vals$school <- row_selected
       
   })
   
