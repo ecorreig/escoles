@@ -13,6 +13,7 @@ library(tidyr)
 library(shinycssloaders)
 library(rmapshaper)
 library(plotly)
+library(DT)
 
 launchApp <- function (wd) {
 

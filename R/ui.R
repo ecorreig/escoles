@@ -99,7 +99,7 @@ ui <- function() {
                  )),
                  fluidRow(box(width = 12, h3("Taula de situació de centres educatius"))),
                  fluidRow(box(
-                   width = 12, shinycssloaders::withSpinner(dataTableOutput(outputId = "school_table"), type = 5)
+                   width = 12, shinycssloaders::withSpinner(DT::dataTableOutput(outputId = "school_table"), type = 5)
                  )),
                  fluidRow(box(
                    width = 12, helpText(a("*Pots trobar la significació dels codis aquí",

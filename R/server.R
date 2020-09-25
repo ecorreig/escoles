@@ -122,7 +122,7 @@ server <- function(input, output, session) {
 
   }")
           ),
-        layerId = norm_esc$Codi_centre,
+        layerId = as.character(norm_esc$Codi_centre),
         as.numeric(norm_esc$Coordenades_GEO_X),
         as.numeric(norm_esc$Coordenades_GEO_Y),
         popup = esc_popup(norm_esc),
@@ -131,7 +131,7 @@ server <- function(input, output, session) {
         icon = get_icons(norm_esc)
       ) %>%
       addAwesomeMarkers(
-        layerId = alt_esc$Codi_centre,
+        layerId = as.character(alt_esc$Codi_centre),
         as.numeric(alt_esc$Coordenades_GEO_X),
         as.numeric(alt_esc$Coordenades_GEO_Y),
         popup = esc_popup(alt_esc),
@@ -156,18 +156,16 @@ server <- function(input, output, session) {
     )
   })
   output$school_table <-
-    renderDataTable({
+    DT::renderDataTable({
       
-      # remove PÒ
-      if (nrow(clean_schools()) > 1) {
-        temp <- clean_schools()[clean_schools()$Codi_centre != "1", ]
-      }
-      as.data.frame(temp)[, school_vars] %>%
-        rename_all(funs(c(new_school_names)))
-    },   options = list(pageLength = 5,
-                        stateSave = TRUE))
+      DT::datatable(
+        as.data.frame(clean_schools())[, school_vars] %>%
+          rename_all(funs(c(new_school_names))), selection = "single", options = list(pageLength = 5,
+                                                                                      stateSave = TRUE)
+      ) 
+    })
 
-  output$summary_table <- renderDataTable({
+  output$summary_table <-renderDataTable({
       withProgress(
         as.data.frame(df %>% 
         mutate(per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")"))) %>%
@@ -211,33 +209,44 @@ server <- function(input, output, session) {
   
   
   # Actions
+  prev_row <- reactiveVal()
+  my_icon = makeAwesomeIcon(icon = 'flag', markerColor = 'pink', iconColor = 'white')
   
-  # val <- reactiveVal()
-  # 
-  # observeEvent(input$school_table_rows_selected, {
-  #   row_selected = qSub()[input$table01_rows_selected,]
-  #   proxy <- leafletProxy('map01')
-  #   print(row_selected)
-  #   proxy %>%
-  #     addAwesomeMarkers(popup=as.character(row_selected$mag),
-  #                       layerId = as.character(row_selected$id),
-  #                       lng=row_selected$long, 
-  #                       lat=row_selected$lat,
-  #                       icon = my_icon)
-  #   
-  #   # Reset previously selected marker
-  #   if(!is.null(prev_row()))
-  #   {
-  #     proxy %>%
-  #       addMarkers(popup=as.character(prev_row()$mag), 
-  #                  layerId = as.character(prev_row()$id),
-  #                  lng=prev_row()$long, 
-  #                  lat=prev_row()$lat)
-  #   }
-  #   # set new value to reactiveVal 
-  #   prev_row(row_selected)
-  # })
+  observeEvent(input$school_table_rows_selected, {
+    row_selected = clean_schools()[input$school_table_rows_selected,]
+    proxy <- leafletProxy('mymap')
+    proxy %>%
+      addAwesomeMarkers(popup=as.character("hola!"),
+                        layerId = as.character(row_selected$Codi_centre),
+                        lng=row_selected$Coordenades_GEO_X,
+                        lat=row_selected$Coordenades_GEO_Y,
+                        icon = my_icon)
+    # Reset previously selected marker
+    if(!is.null(prev_row()))
+    {
+      proxy %>%
+        addMarkers(popup=as.character("hola"), 
+                   layerId = as.character(prev_row()$Codi_centre),
+                   lng=prev_row()$Coordenades_GEO_X, 
+                   lat=prev_row()$Coordenades_GEO_Y)
+    }
+    # set new value to reactiveVal 
+    prev_row(row_selected)
+  })
 
+  
+  observeEvent(input$mymap_marker_click, {
+    clickId <- input$mymap_marker_click$id
+    rowId <- which(clean_schools()$Codi_centre == clickId)
+    DT::dataTableProxy("school_table") %>%
+      selectRows(rowId) %>%
+      selectPage(which(input$school_table_rows_all == rowId) %/% input$school_table_state$length + 1)
+  })
+  
+  
+
+  
+  
   # Actions
   # NOT WORKING -------------------------
 
