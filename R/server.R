@@ -1,6 +1,26 @@
 
 
 server <- function(input, output, session) {
+  
+  get_icons <- function(esc) {
+    
+    # I want to avoid using fontawesome package because it's hard to install
+    school <- "<svg style='height:0.8em;top:.04em;position:relative;' viewBox='0 0 640 512'><path d='M0 224v272c0 8.84 7.16 16 16 16h80V192H32c-17.67 0-32 14.33-32 32zm360-48h-24v-40c0-4.42-3.58-8-8-8h-16c-4.42 0-8 3.58-8 8v64c0 4.42 3.58 8 8 8h48c4.42 0 8-3.58 8-8v-16c0-4.42-3.58-8-8-8zm137.75-63.96l-160-106.67a32.02 32.02 0 0 0-35.5 0l-160 106.67A32.002 32.002 0 0 0 128 138.66V512h128V368c0-8.84 7.16-16 16-16h96c8.84 0 16 7.16 16 16v144h128V138.67c0-10.7-5.35-20.7-14.25-26.63zM320 256c-44.18 0-80-35.82-80-80s35.82-80 80-80 80 35.82 80 80-35.82 80-80 80zm288-64h-64v320h80c8.84 0 16-7.16 16-16V224c0-17.67-14.33-32-32-32z'/></svg>"
+    
+    leaflet::makeAwesomeIcon(
+      text = school,
+      iconColor = "black",
+      markerColor = esc %>% mutate(
+        color = case_when(
+          Codi_centre == "1" ~ "blue",
+          Estat == "Normalitat" ~ "green",
+          Estat == "Grups en quarantena" ~ "orange",
+          Estat == "Tancada" ~ "red",
+          TRUE ~ "black"
+        )
+      ) %>% pull(color)
+    )
+  }
 
   df <- .aecay.df
   esc <- .aecay.esc
@@ -155,27 +175,34 @@ server <- function(input, output, session) {
       )
     )
   })
-  output$school_table <-
-    DT::renderDataTable({
-      
+  output$school_table <- DT::renderDataTable({
+    withProgress(
       DT::datatable(
         as.data.frame(clean_schools())[, school_vars] %>%
-          rename_all(funs(c(new_school_names))), selection = "single", options = list(pageLength = 5,
-                                                                                      stateSave = TRUE)
-      ) 
-    })
+          rename_all(funs(c(new_school_names))),
+        selection = "single",
+        options = list(pageLength = 5,
+                       stateSave = TRUE)
+      )
+    )
+  })
 
-  output$summary_table <-renderDataTable({
-      withProgress(
-        as.data.frame(df %>% 
-        mutate(per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")"))) %>%
+  output$summary_table <- DT::renderDataTable({
+    withProgress(
+      DT::datatable(
+        as.data.frame(df %>%
+                        mutate(
+                          per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")")
+                        )) %>%
           select(all_of(mun_vars)) %>%
           arrange(desc(epg)) %>%
-          rename_all(funs(c(new_mun_names)))
-      ) 
-
-  },
-  options = list(pageLength = 5))
+          rename_all(funs(c(new_mun_names))),
+        selection = "single",
+        options = list(pageLength = 5,
+                       stateSave = TRUE)
+      )
+    )  
+  })
 
 
   output$docs <- renderUI({
@@ -209,39 +236,70 @@ server <- function(input, output, session) {
   
   
   # Actions
-  prev_row <- reactiveVal()
-  my_icon = makeAwesomeIcon(icon = 'flag', markerColor = 'pink', iconColor = 'white')
   
+  # Schools
+  prev_school <- reactiveVal()
+
   observeEvent(input$school_table_rows_selected, {
     row_selected = clean_schools()[input$school_table_rows_selected,]
     proxy <- leafletProxy('mymap')
-    proxy %>%
-      addAwesomeMarkers(popup=as.character("hola!"),
-                        layerId = as.character(row_selected$Codi_centre),
-                        lng=row_selected$Coordenades_GEO_X,
-                        lat=row_selected$Coordenades_GEO_Y,
-                        icon = my_icon)
-    # Reset previously selected marker
-    if(!is.null(prev_row()))
+    proxy %>% 
+      setView(lng=row_selected$Coordenades_GEO_X, 
+              lat=row_selected$Coordenades_GEO_Y, 
+              zoom = 12) %>%
+      addPopups(layerId = as.character(row_selected$Codi_centre),
+        lng=row_selected$Coordenades_GEO_X, 
+                lat=row_selected$Coordenades_GEO_Y + .1, # so that the popup is correctly displayed
+                popup = esc_popup(row_selected), 
+                options = popup_options())
+        
+    if(!is.null(prev_school()))
     {
-      proxy %>%
-        addMarkers(popup=as.character("hola"), 
-                   layerId = as.character(prev_row()$Codi_centre),
-                   lng=prev_row()$Coordenades_GEO_X, 
-                   lat=prev_row()$Coordenades_GEO_Y)
+      proxy %>% 
+        removePopup(layerId = as.character(prev_school()$Codi_centre))
     }
     # set new value to reactiveVal 
-    prev_row(row_selected)
+    prev_school(row_selected)
+      
   })
-
   
-  observeEvent(input$mymap_marker_click, {
-    clickId <- input$mymap_marker_click$id
-    rowId <- which(clean_schools()$Codi_centre == clickId)
-    DT::dataTableProxy("school_table") %>%
-      selectRows(rowId) %>%
-      selectPage(which(input$school_table_rows_all == rowId) %/% input$school_table_state$length + 1)
-  })
+  # Municipis
+  # Schools
+  # prev_mun <- reactiveVal()
+  # 
+  # observeEvent(input$summary_table_rows_selected, {
+  #   row_selected = df[input$summary_table_rows_selected,]
+  #   loc <- sf::st_bbox(row_selected$geometry)
+  #   x <- (loc[1] + loc[3]) / 2
+  #   y <- (loc[2] + loc[4]) / 2
+  #   proxy <- leafletProxy('mymap')
+  #   proxy %>% 
+  #     setView(lng=x, 
+  #             lat=y, 
+  #             zoom = 12) %>%
+  #     addPopups(layerId = row_selected$Codi_centre,
+  #               lng=x, 
+  #               lat=y + .05, # so that the popup is correctly displayed
+  #               mun_popup(row_selected), 
+  #               options = popup_options())
+  #   
+  #   if(!is.null(prev_mun()))
+  #   {
+  #     proxy %>% removePopup(layerId = prev_mun()$Codi_centre)
+  #   }
+  #   # set new value to reactiveVal 
+  #   prev_mun(row_selected)
+  #   
+  # })
+
+  # Working, but not useful
+  # observeEvent(input$mymap_marker_click, {
+  #   clickId <- input$mymap_marker_click$id
+  #   rowId <- which(clean_schools()$Codi_centre == clickId)
+  #   DT::dataTableProxy("school_table") %>%
+  #     selectRows(rowId) %>%
+  #     selectPage(which(input$school_table_rows_all == rowId) %/% input$school_table_state$length + 1)
+  # })
   
   
 
