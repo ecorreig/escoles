@@ -22,7 +22,7 @@ server <- function(input, output, session) {
     )
   }
 
-  df <- .aecay.df
+  df <- .aecay.df %>% arrange(desc(epg))
   esc <- .aecay.esc
   evo <- .aecay.evo
 
@@ -195,7 +195,6 @@ server <- function(input, output, session) {
                           per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")")
                         )) %>%
           select(all_of(mun_vars)) %>%
-          arrange(desc(epg)) %>%
           rename_all(funs(c(new_mun_names))),
         selection = "single",
         options = list(pageLength = 5,
@@ -264,33 +263,31 @@ server <- function(input, output, session) {
   })
   
   # Municipis
-  # Schools
-  # prev_mun <- reactiveVal()
-  # 
-  # observeEvent(input$summary_table_rows_selected, {
-  #   row_selected = df[input$summary_table_rows_selected,]
-  #   loc <- sf::st_bbox(row_selected$geometry)
-  #   x <- (loc[1] + loc[3]) / 2
-  #   y <- (loc[2] + loc[4]) / 2
-  #   proxy <- leafletProxy('mymap')
-  #   proxy %>% 
-  #     setView(lng=x, 
-  #             lat=y, 
-  #             zoom = 12) %>%
-  #     addPopups(layerId = row_selected$Codi_centre,
-  #               lng=x, 
-  #               lat=y + .05, # so that the popup is correctly displayed
-  #               mun_popup(row_selected), 
-  #               options = popup_options())
-  #   
-  #   if(!is.null(prev_mun()))
-  #   {
-  #     proxy %>% removePopup(layerId = prev_mun()$Codi_centre)
-  #   }
-  #   # set new value to reactiveVal 
-  #   prev_mun(row_selected)
-  #   
-  # })
+
+  observeEvent(input$summary_table_rows_selected, {
+    row_selected = df[input$summary_table_rows_selected,]
+    loc <- sf::st_bbox(row_selected$geometry)
+    x <- (loc[1] + loc[3]) / 2
+    y <- (loc[2] + loc[4]) / 2
+    proxy <- leafletProxy('mymap')
+    proxy %>%
+      setView(lng=x,
+              lat=y + .05,
+              zoom = 12) %>%
+      addPopups(layerId = as.character(row_selected$Codi_municipi),
+                lng=x,
+                lat=y,
+                mun_popup(row_selected),
+                options = popup_options())
+
+    if (!is.null(prev_vals$mun))
+    {
+      proxy %>% removePopup(layerId = as.character(prev_vals$mun$Codi_municipi))
+    }
+    # set new value to reactiveVal
+    prev_vals$mun <- row_selected
+
+  })
 
   # Working, but not useful
   # observeEvent(input$mymap_marker_click, {
