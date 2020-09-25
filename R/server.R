@@ -2,8 +2,8 @@
 
 server <- function(input, output, session) {
 
-  df <- .aecay.df
-  esc <- .aecay.esc
+  df <- .aecay.df %>% arrange(desc(epg))
+  esc <- .aecay.esc %>% arrange(desc(Nom_municipi))
   evo <- .aecay.evo
 
   # Colour scale based input
@@ -74,7 +74,9 @@ server <- function(input, output, session) {
       if (4 %in% input$school_status) {
         vals <- c(vals, "Desconnegut")
       }
+      
       clean_schools <- esc[esc$Estat %in% vals | esc$Codi_centre == "1",]
+      
     }
   })
 
@@ -82,8 +84,12 @@ server <- function(input, output, session) {
   # Output
   output$mymap <- renderLeaflet({
     
-    norm_esc <- clean_schools()[clean_schools()$Estat == "Normalitat"  | clean_schools()$Codi_centre == "1", ]
-    alt_esc <- clean_schools()[clean_schools()$Estat != "Normalitat"  | clean_schools()$Codi_centre == "1", ]
+    orb <- clean_schools()$Codi_centre == "1"
+    norm <- clean_schools()$Estat == "Normalitat"
+    q <- clean_schools()$Estat == "Grups en quarantena"
+    norm_esc <- clean_schools()[norm | orb, ]
+    q_esc <- clean_schools()[q | orb, ]
+    t_esc <- clean_schools()[which(!(norm | q)), ]
     
     withProgress(
     leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
@@ -114,15 +120,15 @@ server <- function(input, output, session) {
       ) %>%
       addAwesomeMarkers(
         clusterOptions = markerClusterOptions(
-          disableClusteringAtZoom=12,
+          disableClusteringAtZoom=13,
           iconCreateFunction=JS("function (cluster) {    
     var childCount = cluster.getChildCount(); 
-    var c = ' marker-cluster-custom';  
+    var c = ' marker-cluster-custom-green';  
     return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
 
   }")
           ),
-        layerId = norm_esc$Codi_centre,
+        layerId = as.character(norm_esc$Codi_centre),
         as.numeric(norm_esc$Coordenades_GEO_X),
         as.numeric(norm_esc$Coordenades_GEO_Y),
         popup = esc_popup(norm_esc),
@@ -131,13 +137,30 @@ server <- function(input, output, session) {
         icon = get_icons(norm_esc)
       ) %>%
       addAwesomeMarkers(
-        layerId = alt_esc$Codi_centre,
-        as.numeric(alt_esc$Coordenades_GEO_X),
-        as.numeric(alt_esc$Coordenades_GEO_Y),
-        popup = esc_popup(alt_esc),
+        clusterOptions = markerClusterOptions(
+          disableClusteringAtZoom=13,
+          iconCreateFunction=JS("function (cluster) {    
+    var childCount = cluster.getChildCount(); 
+    var c = ' marker-cluster-custom-orange';  
+    return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+
+  }")),
+        layerId = as.character(q_esc$Codi_centre),
+        as.numeric(q_esc$Coordenades_GEO_X),
+        as.numeric(q_esc$Coordenades_GEO_Y),
+        popup = esc_popup(q_esc),
         popupOptions = popup_options(),
-        label = as.character(alt_esc$Denominacio_completa),
-        icon = get_icons(alt_esc)
+        label = as.character(q_esc$Denominacio_completa),
+        icon = get_icons(q_esc)
+      ) %>%
+      addAwesomeMarkers(
+        layerId = as.character(t_esc$Codi_centre),
+        as.numeric(t_esc$Coordenades_GEO_X),
+        as.numeric(t_esc$Coordenades_GEO_Y),
+        popup = esc_popup(t_esc),
+        popupOptions = popup_options(),
+        label = as.character(t_esc$Denominacio_completa),
+        icon = get_icons(t_esc)
       ) %>%
       addMarkers(
         lat = 41.0,
@@ -155,29 +178,37 @@ server <- function(input, output, session) {
       )
     )
   })
-  output$school_table <-
-    renderDataTable({
-      
-      # remove PÒ
-      if (nrow(clean_schools()) > 1) {
-        temp <- clean_schools()[clean_schools()$Codi_centre != "1", ]
-      }
-      as.data.frame(temp)[, school_vars] %>%
-        rename_all(funs(c(new_school_names)))
-    },   options = list(pageLength = 5,
-                        stateSave = TRUE))
+  output$school_table <- DT::renderDataTable({
+    withProgress(
+      DT::datatable(
+        as.data.frame(clean_schools())[, school_vars] %>%
+          mutate(
+            prob_one_case_class = round(prob_one_case_class, 2),
+            prob_one_case_school = round(prob_one_case_school, 2)
+          ) %>%
+          rename_all(funs(c(new_school_names))),
+        selection = "single",
+        options = list(pageLength = 5,
+                       stateSave = TRUE)
+      )
+    )
+  })
 
-  output$summary_table <- renderDataTable({
-      withProgress(
-        as.data.frame(df %>% 
-        mutate(per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")"))) %>%
+  output$summary_table <- DT::renderDataTable({
+    withProgress(
+      DT::datatable(
+        as.data.frame(df %>%
+                        mutate(
+                          per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")")
+                        )) %>%
           select(all_of(mun_vars)) %>%
-          arrange(desc(epg)) %>%
-          rename_all(funs(c(new_mun_names)))
-      ) 
-
-  },
-  options = list(pageLength = 5))
+          rename_all(funs(c(new_mun_names))),
+        selection = "single",
+        options = list(pageLength = 5,
+                       stateSave = TRUE)
+      )
+    )  
+  })
 
 
   output$docs <- renderUI({
@@ -212,32 +243,86 @@ server <- function(input, output, session) {
   
   # Actions
   
-  # val <- reactiveVal()
-  # 
-  # observeEvent(input$school_table_rows_selected, {
-  #   row_selected = qSub()[input$table01_rows_selected,]
-  #   proxy <- leafletProxy('map01')
-  #   print(row_selected)
-  #   proxy %>%
-  #     addAwesomeMarkers(popup=as.character(row_selected$mag),
-  #                       layerId = as.character(row_selected$id),
-  #                       lng=row_selected$long, 
-  #                       lat=row_selected$lat,
-  #                       icon = my_icon)
-  #   
-  #   # Reset previously selected marker
-  #   if(!is.null(prev_row()))
-  #   {
-  #     proxy %>%
-  #       addMarkers(popup=as.character(prev_row()$mag), 
-  #                  layerId = as.character(prev_row()$id),
-  #                  lng=prev_row()$long, 
-  #                  lat=prev_row()$lat)
-  #   }
-  #   # set new value to reactiveVal 
-  #   prev_row(row_selected)
-  # })
+  # Schools
+  prev_vals <- reactiveValues()
 
+  observeEvent(input$school_table_rows_selected, {
+    row_selected = clean_schools()[input$school_table_rows_selected,]
+    proxy <- leafletProxy('mymap')
+    proxy %>% 
+      setView(lng=row_selected$Coordenades_GEO_X, 
+              lat=row_selected$Coordenades_GEO_Y + .05, # so that the popup is correctly displayed, 
+              zoom = 12) %>%
+      addPopups(layerId = as.character(row_selected$Codi_centre),
+        lng=row_selected$Coordenades_GEO_X, 
+                lat=row_selected$Coordenades_GEO_Y,
+                popup = esc_popup(row_selected), 
+                options = popup_options())
+        
+    if(!is.null(prev_vals$school))
+    {
+      proxy %>% 
+        removePopup(layerId = as.character(prev_vals$school$Codi_centre))
+    }
+    
+    if (!is.null(prev_vals$mun))
+    {
+      proxy %>% removePopup(layerId = as.character(prev_vals$mun$Codi_municipi))
+    }
+    
+    # set new value to reactiveVal 
+    prev_vals$school <- row_selected
+      
+  })
+  
+  # Municipis
+
+  observeEvent(input$summary_table_rows_selected, {
+    row_selected = df[input$summary_table_rows_selected,]
+    loc <- sf::st_bbox(row_selected$geometry)
+    x <- (loc[1] + loc[3]) / 2
+    y <- (loc[2] + loc[4]) / 2
+    proxy <- leafletProxy('mymap')
+    proxy %>%
+      setView(lng=x,
+              lat=y + .05,
+              zoom = 9) %>%
+      addPopups(layerId = as.character(row_selected$Codi_municipi),
+                lng=x,
+                lat=y,
+                mun_popup(row_selected),
+                options = popup_options())
+
+    if(!is.null(prev_vals$school))
+    {
+      proxy %>% 
+        removePopup(layerId = as.character(prev_vals$school$Codi_centre))
+    }
+    
+    if (!is.null(prev_vals$mun))
+    {
+      proxy %>% removePopup(layerId = as.character(prev_vals$mun$Codi_municipi))
+    }
+    
+    
+    # set new value to reactiveVal
+    prev_vals$mun <- row_selected
+
+  })
+
+  # Working, but not useful
+  # observeEvent(input$mymap_marker_click, {
+  #   clickId <- input$mymap_marker_click$id
+  #   rowId <- which(clean_schools()$Codi_centre == clickId)
+  #   DT::dataTableProxy("school_table") %>%
+  #     selectRows(rowId) %>%
+  #     selectPage(which(input$school_table_rows_all == rowId) %/% input$school_table_state$length + 1)
+  # })
+  
+  
+
+  
+  
   # Actions
   # NOT WORKING -------------------------
 

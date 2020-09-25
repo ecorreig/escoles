@@ -39,9 +39,15 @@ display:none;
 .leaflet-container {
     background-color:rgba(255,255,255,)!important;
 }
-.marker-cluster-custom {
+.marker-cluster-custom-green {
   background-color: rgba(50, 186, 26, 1);
 }
+.marker-cluster-custom-orange {
+  background-color: rgba(255,165,0, 1);
+}
+.leaflet-popup-content {
+    line-height: 1;
+}}
   "
   )
 }
@@ -84,31 +90,31 @@ ui <- function() {
                    "de normalitat, pot ser que l'aplicació vagi lenta."
                  ),
                  h3("Evolució"),
-                 plotlyOutput(outputId = "evo1"),
-                 plotlyOutput(outputId = "evo2"),
+                 plotly::plotlyOutput(outputId = "evo1"),
+                 plotly::plotlyOutput(outputId = "evo2"),
                  helpText("*CEs = Centres educatius")
 
                ),
                mainPanel(
-                 fluidRow(box(width = 12, h5("Mapa de l'estat dels centres educatius de Catalunya segons la incidència de COVID19"))),
-                 fluidRow(box(
-                   width = 12, shinycssloaders::withSpinner(leafletOutput(outputId = "mymap", height = 700), type = 5)
+                 fluidRow(shinydashboard::box(width = 12, h5("Mapa de l'estat dels centres educatius de Catalunya segons la incidència de COVID19"))),
+                 fluidRow(shinydashboard::box(
+                   width = 12, shinycssloaders::withSpinner(leaflet::leafletOutput(outputId = "mymap", height = 700), type = 5)
                  )),
-                 fluidRow(box(
+                 fluidRow(shinydashboard::box(
                    width = 12, helpText("*A l'escala de colors, hem tallat els indicadors epidemiològics a valors límit quan eren desorbitats, però quan apretes sobre els territoris encara et sortiran els valors orginals.")
                  )),
-                 fluidRow(box(width = 12, h3("Taula de situació de centres educatius"))),
-                 fluidRow(box(
-                   width = 12, shinycssloaders::withSpinner(dataTableOutput(outputId = "school_table"), type = 5)
+                 fluidRow(shinydashboard::box(width = 12, h3("Taula de situació de centres educatius"))),
+                 fluidRow(shinydashboard::box(
+                   width = 12, shinycssloaders::withSpinner(DT::dataTableOutput(outputId = "school_table"), type = 5)
                  )),
-                 fluidRow(box(
+                 fluidRow(shinydashboard::box(
                    width = 12, helpText(a("*Pots trobar la significació dels codis aquí",
                                           href = "http://ensenyament.gencat.cat/web/.content/home/arees-actuacio/centres-serveis-educatius/centres/directoris-centres/codisnivellseducatius.pdf",
                                           target="_blank"))
                  )),
-                 fluidRow(box(width = 12, h3("Taula de situació de municipis"))),
-                 fluidRow(box(
-                   width = 12, shinycssloaders::withSpinner(dataTableOutput(outputId = "summary_table"), type = 5)
+                 fluidRow(shinydashboard::box(width = 12, h3("Taula de situació de municipis"))),
+                 fluidRow(shinydashboard::box(
+                   width = 12, shinycssloaders::withSpinner(DT::dataTableOutput(outputId = "summary_table"), type = 5)
                  )),
                  tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
                )

@@ -109,6 +109,6 @@ update_schools <- function() {
 # evo
 
 import_evo <- function() {
-  pa_ <- file.path(getwd(), "data", "evo.xlsx")
+  pa_ <- file.path(getwd(), "data", "evo.xlsx") 
   readxl::read_xlsx(pa_, sheet = 1)
 }
