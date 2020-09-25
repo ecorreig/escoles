@@ -16,7 +16,8 @@ packs <- c(
   "shinycssloaders",
   "rmapshaper",
   "plotly",
-  "zoo"
+  "zoo",
+  "DT"
 )
 
 new.packages <- packs[!(packs %in% installed.packages()[,"Package"])]
