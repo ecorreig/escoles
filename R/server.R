@@ -199,7 +199,8 @@ server <- function(input, output, session) {
       DT::datatable(
         as.data.frame(df %>%
                         mutate(
-                          per_quarantena = paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")")
+                          !is.na(n) ~ paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")"),
+                          TRUE ~ "Cap centre educatiu"
                         )) %>%
           select(all_of(mun_vars)) %>%
           rename_all(funs(c(new_mun_names))),

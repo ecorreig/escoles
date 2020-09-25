@@ -65,34 +65,20 @@ compute_probs <- function(df) {
   df %>% mutate(
     students_with_covid = Poblacio / sum(Poblacio) * student_num * taxa_incidencia_14d / tax_num * ratio_covid_children,
     prevalence = numcasos / Poblacio * ratio_covid_children,
-    prob_one_case_class = prob_one_case_class(prevalence, students_per_class),
-    prob_one_case_school = prob_one_case_school(prevalence, num_students = student_num / school_num),
-    prob_closed_school = prob_closed_school(prevalence, num_students = student_num / school_num)
+    prob_one_case_class = prob_one_case(prevalence, students_per_class),
+    prob_one_case_school = prob_one_case(prevalence, round(student_num / school_num)),
+    # Assume two classes to close the school
+    prob_closed_school = prob_one_case(prevalence, round(student_num / school_num), num = 2)
   )
 
 }
 
-prob_one_case_class <- function(prev, stud_class = 25) {
+prob_one_case <- function(prev, n, num = 0, type = "binomial") {
   # Function to compute the probability of one case
-  1 - dpois(0, stud_class * prev)
-}
-
-prob_one_case_school <- function(prev, num_students = NULL, num_lines = NULL, num_courses = NULL, stud_class = 25) {
-  if (is.null(num_students)) {
-    1 - dpois(0, num_lines * num_courses * stud_class * prev)
+  if (type == "binomial") {
+    1 - pbinom(num, n, prev)
   } else {
-    1 - dpois(0, num_students * prev)
-  }
-}
-
-prob_closed_school <- function(prev, num_students = NULL, num_lines = NULL, num_courses = NULL, stud_class = 25) {
-  # TODO: put this together with the previous one
-  
-  # In principle the school is closed after 2-3 classes are affected. We assume it's 2
-  if (is.null(num_students)) {
-    1 - ppois(1, num_lines * num_courses * stud_class * prev)
-  } else {
-    1 - ppois(1, num_students * prev)
+    1 - ppois(num, n * prev)
   }
 }
 
@@ -150,7 +136,7 @@ compute_epi_schools <- function(esc, df) {
                          TRUE ~ default_als_per_classe
                        ),
                        prob_one_case_class = case_when(
-                         !is.na(als_per_classe) ~ prob_one_case_class(prevalence, als_per_classe) * 100,
+                         !is.na(als_per_classe) ~ prob_one_case(prevalence, als_per_classe) * 100,
                          TRUE ~ prob_one_case_class
                        ),
                        num_alumnes = as.integer(num_alumnes),
@@ -168,11 +154,11 @@ compute_epi_schools <- function(esc, df) {
                          TRUE ~ NA_integer_
                        ),
                        prob_one_case_school = case_when(
-                         !is.na(num_alumnes) ~ prob_one_case_school(prevalence, num_alumnes) * 100,
+                         !is.na(num_alumnes) ~ prob_one_case(prevalence, num_alumnes) * 100,
                          TRUE ~ prob_one_case_school
                        ),
                        prob_closed_school = case_when(
-                         !is.na(num_alumnes) ~ prob_closed_school(prevalence, num_alumnes) * 100,
+                         !is.na(num_alumnes) ~ prob_one_case(prevalence, num_alumnes, num = 2) * 100,
                          TRUE ~ prob_closed_school
                        )
                      ) 
