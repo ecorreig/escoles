@@ -252,11 +252,17 @@ server <- function(input, output, session) {
                 popup = esc_popup(row_selected), 
                 options = popup_options())
         
-    if(!is.null(prev_vals))
+    if(!is.null(prev_vals$school))
     {
       proxy %>% 
         removePopup(layerId = as.character(prev_vals$school$Codi_centre))
     }
+    
+    if (!is.null(prev_vals$mun))
+    {
+      proxy %>% removePopup(layerId = as.character(prev_vals$mun$Codi_municipi))
+    }
+    
     # set new value to reactiveVal 
     prev_vals$school <- row_selected
       
@@ -280,10 +286,18 @@ server <- function(input, output, session) {
                 mun_popup(row_selected),
                 options = popup_options())
 
+    if(!is.null(prev_vals$school))
+    {
+      proxy %>% 
+        removePopup(layerId = as.character(prev_vals$school$Codi_centre))
+    }
+    
     if (!is.null(prev_vals$mun))
     {
       proxy %>% removePopup(layerId = as.character(prev_vals$mun$Codi_municipi))
     }
+    
+    
     # set new value to reactiveVal
     prev_vals$mun <- row_selected
 
