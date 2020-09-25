@@ -17,27 +17,27 @@ val_or_none <- function(x) {
 
 mun_popup <- function(df) {
   per_q <- paste0(round(df$infected / df$n * 100, 2), "% (", df$infected, "/", df$n, ")")
-  paste0("<h3>", df$Municipi, " (", df$Poblacio," habitants)</h3>  
-         <strong> Índex de risc: ", df$epg, "</strong> 
-         <p> Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
+  paste0("<h3>", df$Municipi, " (", df$Poblacio," hab.)</h3>  
+         <h4>Índex de risc: <strong>", df$epg, "</strong> </h4>
+         <p>Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
          <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
          <p>Rho7: ", df$rho, "</p>
-         <p>Percentatge escoles amb grups en quarantena: ", per_q, "</p>
-         <h5> Probabilitat d'un cas en una classe: ",  df$prob_one_case_class, "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  df$prob_one_case_school, "%</p>"
+         <h5>% centres amb quarantenes: <strong>", per_q, "</strong></h5>
+         <p> Prob. un cas en una classe: ",  df$prob_one_case_class, "%</p>
+         <p>Prob. un cas a l'escola: ",  df$prob_one_case_school, "%</p>"
   )
 }
 
 esc_popup <- function(esc) {
          paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
-         <h2> Estat: ", esc$Estat, "</h2>
+         <h2> Estat: <strong>", esc$Estat, "</strong></h2>
          <p> Grups en quarantena: ", esc$Grups_en_quarantena, "</p>
          <p> Alummnes en quarantena: ", esc$ALUMN_CONFIN, "</p>
          <p> Personal en quarantena: ", esc$DOCENT_CONFIN + esc$ALTRES_CONFIN, "</p>
          <p> Alumnes positius: ", esc$ALUMN_POSITIU, "</p>
          <p> Personal positiu: ", esc$PERSONAL_POSITIU + esc$ALTRES_POSITIU, "</p>
-         <h5> Probabilitat d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</h5>
-         <p>Probabilitat d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</p>"
+         <p> Prob. d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</p>
+         <h5>Prob. d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</h5>"
          )
 }
 

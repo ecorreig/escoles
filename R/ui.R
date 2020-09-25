@@ -42,6 +42,9 @@ display:none;
 .marker-cluster-custom {
   background-color: rgba(50, 186, 26, 1);
 }
+.leaflet-popup-content {
+    line-height: 1;
+}}
   "
   )
 }
