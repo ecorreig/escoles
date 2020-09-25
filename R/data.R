@@ -109,6 +109,6 @@ update_schools <- function() {
 # evo
 
 import_evo <- function() {
-  pa_ <- system.file("extdata", "evo.xlsx", package = "EscolesCovid", mustWork = T)
+  pa_ <- file.path(getwd(), "data", "evo.xlsx") 
   readxl::read_xlsx(pa_, sheet = 1)
 }
