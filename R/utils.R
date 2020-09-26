@@ -16,19 +16,35 @@ val_or_none <- function(x) {
 }
 
 mun_popup <- function(df) {
-  per_q <- ifelse(
+  per_q_old <- ifelse(
     !is.na(df$n), 
     paste0(round(df$infected / df$n * 100, 2), "% (", df$infected, "/", df$n, ")"), 
     "Cap centre educatiu"
-  )  
-  paste0("<h3>", df$Municipi, " (", df$Poblacio," hab.)</h3>  
-         <h4>Índex de risc: <strong>", df$epg, "</strong> </h4>
-         <p>Casos últims 14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " casos per 100k h.) </p>
-         <p>Casos últimes 24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " casos per 100k h.) </p>
-         <p>Rho7: ", df$rho, "</p>
-         <h5>% centres amb quarantenes: <strong>", per_q, "</strong></h5>
-         <p> Prob. un cas en una classe: ",  df$prob_one_case_class, "%</p>
-         <p>Prob. un cas a l'escola: ",  df$prob_one_case_school, "%</p>"
+  )
+  per_q <- ifelse(
+    !is.na(df$n), 
+    paste0(df$infected, " de ", df$n, " CEs amb confinaments (", round(df$infected / df$n * 100, 2), "%)"), 
+    "Cap centre educatiu"
+  ) 
+  paste0("<div class='popup'>
+  <h3>", df$Municipi, " (", df$Poblacio," hab.)</h3>
+  <div class='indicators'>
+  <h4>Índex de risc: <strong>", df$epg, "</strong> </h4>
+  <p>&rho;<sub>7</sub>: ", df$rho, "</p>
+  <h4><strong>", per_q, "</strong></h4>
+  </div>
+<strong>Casos acumulats</strong>
+<ul>
+  <li>14 dies: ", df$numcasos, " (", df$taxa_incidencia_14d, " per 100k h.)</li>
+  <li>24 hores: ", df$casos_24h, " (", df$taxa_casos_nous, " per 100k h.)</li>
+</ul>
+<br>
+<strong>Probabilitats de mínim un cas:</strong>
+<ul>
+  <li>En una classe: ", df$prob_one_case_class, "%</li> 
+  <li>En una escola: ",  df$prob_one_case_school, "%</li>
+</ul>
+</div>"
   )
 }
 
@@ -59,10 +75,7 @@ orbita_popup <- "
 
 popup_options <- function() {
   popupOptions(
-    style = list(
-      "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-      "padding" = "10px"
-    )
+    closeButton="Tanca"
   )
 } 
 

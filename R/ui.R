@@ -45,10 +45,62 @@ display:none;
 .marker-cluster-custom-orange {
   background-color: rgba(255,165,0, 1);
 }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    opacity: .95;
+}
+.leaflet-container a {
+    color: #0078A8!important;
+}
 .leaflet-popup-content {
     line-height: 1;
-}}
-  "
+    display: block;
+    background: #fff;
+    color: #000;
+    margin: 7px;
+    margin-bottom: 20px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    width: 450px;
+    min-height: 200px;
+    max-width: 100%;
+    max-height: calc(100% - 20px);
+    overflow: auto;
+    box-sizing: border-box;
+    z-index: 99;
+    user-select: auto;
+    pointer-events: auto;
+    box-shadow = 3px 3px rgba(0,0,0,0.25);
+}
+ul {
+  list-style-type: none;
+  margin: 5px;
+  padding: 0;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  content: 'Tanca';
+  cursor: pointer;
+  position: absolute;
+  top: 90%;
+  left: 40%;
+  padding: 5px 5px;
+  margin: 12px 0;
+  transform: translate(0%, -50%);
+  text-align: center;
+  width: 50px;
+  height: 14px;
+  font: 16px/14px Tahoma, Verdana, sans-serif;
+  color: #c3c3c3;
+  text-decoration: none;
+  font-weight: bold;
+  background: transparent;
+  
+}
+h3 {
+    margin-top: 5px;
+    margin-bottom: 10.5px;
+}
+"
   )
 }
 
