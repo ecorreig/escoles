@@ -115,12 +115,12 @@ update_data <- function() {
   data_creacio <- lubridate::now()
   
   # Store if it's new
-  files <- list.files(file.path(getwd(), "data"))
+  files <- list.files(file.path(getwd(), "data",  "daily"))
   name <- make.names(paste0(data_creacio, ".csv"))
   
   # only save on local
   if (!name %in% files | Sys.info()["sysname"] == "Windows") { 
-    pa <- file.path(file.path(getwd(), "data", name))
+    pa <- file.path(file.path(getwd(), "data", "daily", name))
     write.csv(tot, pa, row.names = F)
   }
   
