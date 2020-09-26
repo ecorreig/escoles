@@ -112,13 +112,14 @@ update_data <- function() {
     )
   
   # Check whether data is new
-  data_creacio <- tot$DATAGENERACIO[2]
+  data_creacio <- lubridate::now()
   
   # Store if it's new
   files <- list.files(file.path(getwd(), "data"))
   name <- make.names(paste0(data_creacio, ".csv"))
   
-  if (!name %in% files) {
+  # only save on local
+  if (!name %in% files | Sys.info()["sysname"] == "Windows") { 
     pa <- file.path(file.path(getwd(), "data", name))
     write.csv(tot, pa, row.names = F)
   }
@@ -149,14 +150,14 @@ update_schools_DEPRECATED <- function() {
 
 import_evo <- function() {
   pa_ <- file.path("data", "evo.csv") 
-  read.csv(pa_, sep = ";", encoding = "UTF-8")
+  aa <- suppressMessages(readr::read_csv(pa_))
 }
 
 update_evo <- function(df) {
   
   # Careful, this updates records from same datetime (TODO: think about this)
   evo <- import_evo() %>% add_row(
-    Dia = df$DATAGENERACIO[2],
+    Dia = lubridate::now(),
     `Casos alumnes` = sum(df$ALUMN_POSITIU, na.rm = T),
     `Alumnes confinats` = sum(df$ALUMN_CONFIN, na.rm = T),
     `Casos professionals` = sum(df$PERSONAL_POSITIU + df$ALTRES_POSITIU, na.rm = T),
@@ -166,7 +167,9 @@ update_evo <- function(df) {
     `Escoles tancades` = sum(df$ESTAT == "Confinat", na.rm = T)
   )
   
-  write.csv(evo, file.path("data", "evo.csv"))
+  evo <- evo[!duplicated(evo[, -1]), ]
+  
+  readr::write_csv(evo, file.path("data", "evo.csv"))
   evo
   
 }
