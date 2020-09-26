@@ -49,15 +49,27 @@ mun_popup <- function(df) {
 }
 
 esc_popup <- function(esc) {
-         paste0("<h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
+         paste0("
+         <div class='popup'>
+         <h3>", esc$Denominacio_completa, " (", esc$Nom_naturalesa,") </h3>
          <h2> Estat: <strong>", esc$Estat, "</strong></h2>
-         <p> Grups en quarantena: ", esc$Grups_en_quarantena, "</p>
-         <p> Alummnes en quarantena: ", esc$ALUMN_CONFIN, "</p>
-         <p> Personal en quarantena: ", esc$DOCENT_CONFIN + esc$ALTRES_CONFIN, "</p>
-         <p> Alumnes positius: ", esc$ALUMN_POSITIU, "</p>
-         <p> Personal positiu: ", esc$PERSONAL_POSITIU + esc$ALTRES_POSITIU, "</p>
-         <p> Prob. d'un cas en una classe: ", round(esc$prob_one_case_class, 2), "%</p>
-         <h5>Prob. d'un cas a l'escola: ",  round(esc$prob_one_case_school, 2), "%</h5>"
+         <strong>Quarantenes:</strong>
+            <ul>
+              <li>Grups: ", esc$Grups_en_quarantena, "</li> 
+              <li>Alumnes: ",   esc$ALUMN_CONFIN, "</li>
+              <li>Personal: ",   esc$DOCENT_CONFIN  + esc$ALTRES_CONFIN, "</li>
+            </ul>
+          <strong>Positius:</strong>
+            <ul>
+              <li>Alumnes: ",   esc$ALUMN_POSITIU, "</li>
+              <li>Personal: ",   esc$PERSONAL_POSITIU  + esc$ALTRES_POSITIU, "</li>
+            </ul>
+            <strong>Probabilitats de mínim un cas:</strong>
+            <ul>
+              <li>En una classe: ", round(esc$prob_one_case_class, 2), "</li> 
+              <li>En una escola: ",   round(esc$prob_one_case_school, 2), "</li>
+            </ul>
+                </div>"
          )
 }
 
