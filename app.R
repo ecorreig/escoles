@@ -27,7 +27,7 @@ launchApp <- function (wd) {
   df <- get_covid_data()
   esc <- get_school_data(df)
   df <- compute_percentages(df, esc)
-  evo <- get_evo()
+  evo <- get_evo(esc)
   
   # Init stuff
   globalObjects = ls(.GlobalEnv)
@@ -52,4 +52,4 @@ launchApp <- function (wd) {
   shinyApp(ui = ui(), server = server)
 }
 
-# launchApp("server")
+launchApp(".")

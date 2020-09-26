@@ -176,8 +176,8 @@ compute_percentages <- function(df, esc) {
 
 # Evolution
 
-get_evo <- function(evo) {
-  import_evo() %>% 
+get_evo <- function(esc) {
+  update_evo(esc) %>% 
     mutate(
       `Casos alumnes` = round(zoo::na.approx(`Casos alumnes`)),
       `Alumnes confinats` = round(zoo::na.approx(`Alumnes confinats`)),

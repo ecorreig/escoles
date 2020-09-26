@@ -86,19 +86,59 @@ import_pop_data <- function() {
   pb
 }
 
+update_data <- function() {
+  # Get school covid status
+  df <- read.csv(url("https://tracacovid.akamaized.net/data.csv"), sep = ";")
+  # Get shool data
+  es <- readxl::read_xlsx(file.path("data", "escoles_base.xlsx"))
+  
+  # Merge
+  tot <-
+    es %>% left_join(df,
+                     by = c("Codi centre" = "CODCENTRE"),
+                     suffix = c("", "")) %>%
+    mutate(
+      Estat = case_when(
+        ESTAT == "Confinat" ~ "Tancada",
+        GRUP_CONFIN > 0 ~ "Grups en quarantena",
+        TRUE ~ "Normalitat"
+      ),
+      `Grups en quarantena` = case_when(
+        is.na(GRUP_CONFIN) ~ as.integer(0),
+        TRUE ~ GRUP_CONFIN
+      ),
+      DATAGENERACIO = lubridate::dmy_hm(DATAGENERACIO)
+      
+    )
+  
+  # Check whether data is new
+  data_creacio <- lubridate::now()
+  
+  # Store if it's new
+  files <- list.files(file.path(getwd(), "data",  "daily"))
+  name <- make.names(paste0(data_creacio, ".csv"))
+  
+  # only save on local
+  if (!name %in% files | Sys.info()["sysname"] == "Windows") { 
+    pa <- file.path(file.path(getwd(), "data", "daily", name))
+    write.csv(tot, pa, row.names = F)
+  }
+  
+  tot
+}
+
 # Import school data
 import_schools <- function() {
 
-  pa_ <- file.path(getwd(), "data", "escoles.xlsx")
-
-  esc <- readxl::read_xlsx(pa_, sheet = 1)
+  esc <- update_data()
   esc %>%  rename_all(funs(make_ascii(names(esc)))) %>%
     mutate(Codi_municipi = as.character(Codi_municipi)) %>%
     mutate(Codi_municipi = ifelse(nchar(Codi_municipi) < 5, paste0("0", Codi_municipi), Codi_municipi))
 }
 
-update_schools <- function() {
+update_schools_DEPRECATED <- function() {
   # Warning: only run locally
+  # DEPRECRATED
   source("R/secret.R", encoding = "UTF-8")
 
   pa_ <- file.path(getwd(), "data")
@@ -109,6 +149,27 @@ update_schools <- function() {
 # evo
 
 import_evo <- function() {
-  pa_ <- file.path(getwd(), "data", "evo.xlsx") 
-  readxl::read_xlsx(pa_, sheet = 1)
+  pa_ <- file.path("data", "evo.csv") 
+  aa <- suppressMessages(readr::read_csv(pa_))
+}
+
+update_evo <- function(df) {
+  
+  # Careful, this updates records from same datetime (TODO: think about this)
+  evo <- import_evo() %>% add_row(
+    Dia = lubridate::now(),
+    `Casos alumnes` = sum(df$ALUMN_POSITIU, na.rm = T),
+    `Alumnes confinats` = sum(df$ALUMN_CONFIN, na.rm = T),
+    `Casos professionals` = sum(df$PERSONAL_POSITIU + df$ALTRES_POSITIU, na.rm = T),
+    `Professionals confinats` = sum(df$DOCENT_CONFIN + df$ALTRES_CONFIN, na.rm = T),
+    `Grups confinats` = sum(df$GRUP_CONFIN, na.rm = T),
+    `Escoles amb grups confinats` = sum(df$GRUP_CONFIN > 0, na.rm = T),
+    `Escoles tancades` = sum(df$ESTAT == "Confinat", na.rm = T)
+  )
+  
+  evo <- evo[!duplicated(evo[, -1]), ]
+  
+  readr::write_csv(evo, file.path("data", "evo.csv"))
+  evo
+  
 }
