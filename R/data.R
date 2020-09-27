@@ -88,7 +88,9 @@ import_pop_data <- function() {
 
 update_data <- function() {
   # Get school covid status
-  df <- read.csv(url("https://tracacovid.akamaized.net/data.csv"), sep = ";")
+  headers <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
+  names(headers) <- "user-agent"
+  df <- read.csv(url("https://tracacovid.akamaized.net/data.csv", headers = headers), sep = ";")
   # Get shool data
   es <- readxl::read_xlsx(file.path("data", "escoles_base.xlsx"))
   
