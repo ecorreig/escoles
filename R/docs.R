@@ -45,7 +45,11 @@ La guia de Harvard, que podeu trobar <a href = 'https://globalepidemics.org/wp-c
 
 <h2> Probabilitats </h2>
 
-<p> Pel que fa als càlculs de probabilitats de casos, s'han utilitzat models de Poisson amb lambda igual a la prevalença de la malaltia a 14 dies. </p>
+<p> Pel que fa als càlculs de probabilitats de casos, s'han utilitzat models Binomials tenint en compte la prevalença de la malaltia a 14 dies. </p>
+
+<p> El que anomenem 'Prob. cas classe' és la probabilitat de que hi hagi un cas cada 25 alumnes, per tant, un cas <strong>en cada classe</strong>. 'Prob. cas escola' és la probabilitat de que hi hagi un cas cada N alumnes, on N és la mida de l'escola que depèn del número de cursos i de línies d'aprenentatge de que disposen. Tenim la informació del número de cursos, però no la del número de línies, de manera que hem assumit que totes les escoles tenen només dues línies. Evidentment aquesta és una mala aproximació i estem treballant per aconseguir aquesta informació. </p>
+
+<p> Aquests models tenen en compte que l'epidèmia està repartida de forma homogènia en la població del municipi. Això vol dir, per exemple, que si hi ha un brot gran però controlat (per exemple, en una residència), nosaltres assumim que tots aquells casos estan repartits per la població i per tant alguns seran infants i adolescents. Evidentment, això no és mai així i per tant aquests càlculs s'han de prendre com una primera aproximació i s'han de tenir en compte les idiosincràcies de cada municipi i cada brot per interpretar-los correctament.</p>
 
 <strong>Nota: seguint aquest <a href = 'https://www.nature.com/articles/s41591-020-0962-9' target='_blank'>article</a> s'ha tingut en compte que els infants i adolescents tenen una incidència de la malaltia d'aproximadament el 40% que els adults. Aquest valor segurament vagi actualitzant-se a mesura que surten més investigacions.</strong>
 
