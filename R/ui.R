@@ -180,7 +180,7 @@ ui <- function() {
                         href = "https://www.projecteorbita.cat/wp-content/uploads/2020/09/logo_icon_sense_fons.png")),
     tags$body(tags$style(map_css())),
     tags$script(HTML(paste0("var header = $('.navbar > .container-fluid');
-header.append('<div style=\"float:right\"><a href=\"https://projecteorbita.cat\"><img src=\"", link_logo(), "\" alt=\"logo_orbita\" style=\"float:right;width:100px;height:45px;padding-top:5px;\"> </a>`</div>');
+header.append('<div style=\"float:right\"><a href=\"https://projecteorbita.cat\"><img src=\"", link_logo(), "\" alt=\"logo_orbita\" style=\"float:right;width:100px;height:45px;padding-top:5px;\"> </a></div>');
     console.log(header)")))
   )
 }
