@@ -17,8 +17,7 @@ packs <- c(
   "rmapshaper",
   "plotly",
   "zoo",
-  "DT",
-  "readr"
+  "DT"
 )
 
 new.packages <- packs[!(packs %in% installed.packages()[,"Package"])]

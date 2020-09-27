@@ -150,7 +150,10 @@ update_schools_DEPRECATED <- function() {
 
 import_evo <- function() {
   pa_ <- file.path("data", "evo.csv") 
-  aa <- suppressMessages(readr::read_csv(pa_))
+  read.csv(pa_, encoding = "UTF-8") %>% 
+    mutate(
+      Dia = lubridate::ymd_hms(Dia)
+    )
 }
 
 update_evo <- function(df) {
@@ -158,18 +161,18 @@ update_evo <- function(df) {
   # Careful, this updates records from same datetime (TODO: think about this)
   evo <- import_evo() %>% add_row(
     Dia = lubridate::now(),
-    `Casos alumnes` = sum(df$ALUMN_POSITIU, na.rm = T),
-    `Alumnes confinats` = sum(df$ALUMN_CONFIN, na.rm = T),
-    `Casos professionals` = sum(df$PERSONAL_POSITIU + df$ALTRES_POSITIU, na.rm = T),
-    `Professionals confinats` = sum(df$DOCENT_CONFIN + df$ALTRES_CONFIN, na.rm = T),
-    `Grups confinats` = sum(df$GRUP_CONFIN, na.rm = T),
-    `Escoles amb grups confinats` = sum(df$GRUP_CONFIN > 0, na.rm = T),
-    `Escoles tancades` = sum(df$ESTAT == "Confinat", na.rm = T)
+    `Casos.alumnes` = sum(df$ALUMN_POSITIU, na.rm = T),
+    `Alumnes.confinats` = sum(df$ALUMN_CONFIN, na.rm = T),
+    `Casos.professionals` = sum(df$PERSONAL_POSITIU + df$ALTRES_POSITIU, na.rm = T),
+    `Professionals.confinats` = sum(df$DOCENT_CONFIN + df$ALTRES_CONFIN, na.rm = T),
+    `Grups.confinats` = sum(df$GRUP_CONFIN, na.rm = T),
+    `Escoles.amb.grups.confinats` = sum(df$GRUP_CONFIN > 0, na.rm = T),
+    `Escoles.tancades` = sum(df$ESTAT == "Confinat", na.rm = T)
   )
   
   evo <- evo[!duplicated(evo[, -1]), ]
   
-  readr::write_csv(evo, file.path("data", "evo.csv"))
+  write.csv(evo, file.path("data", "evo.csv"), row.names = F)
   evo
   
 }

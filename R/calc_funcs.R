@@ -179,10 +179,10 @@ compute_percentages <- function(df, esc) {
 get_evo <- function(esc) {
   update_evo(esc) %>% 
     mutate(
-      `Casos alumnes` = round(zoo::na.approx(`Casos alumnes`)),
-      `Alumnes confinats` = round(zoo::na.approx(`Alumnes confinats`)),
-      `Casos professionals` = round(zoo::na.approx(`Casos professionals`)),
-      `Professionals confinats` = round(zoo::na.approx(`Professionals confinats`))
+      `Casos.alumnes` = round(zoo::na.approx(`Casos.alumnes`)),
+      `Alumnes.confinats` = round(zoo::na.approx(`Alumnes.confinats`)),
+      `Casos.professionals` = round(zoo::na.approx(`Casos.professionals`)),
+      `Professionals.confinats` = round(zoo::na.approx(`Professionals.confinats`))
     )
 }
 
