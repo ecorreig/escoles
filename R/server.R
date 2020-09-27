@@ -200,6 +200,7 @@ server <- function(input, output, session) {
       DT::datatable(
         as.data.frame(df %>%
                         mutate(
+                          per_num = round(infected / n * 100, 2),
                           per_quarantena = case_when(
                             !is.na(n) ~ paste0(round(infected / n * 100, 2), "% (", infected, "/", n, ")"),
                             TRUE ~ "Cap centre educatiu"

@@ -118,6 +118,7 @@ mun_vars <-
     "taxa_incidencia_14d",
     "taxa_casos_nous",
     "epg",
+    "per_num",
     "per_quarantena"
   )
 new_mun_names <-
@@ -131,7 +132,8 @@ new_mun_names <-
     "Incidència 14 dies",
     "Taxa 24h",
     "Risc de rebrot",
-    "% escoles amb quarantenes"
+    "% CEs amb quarantenes",
+    "Info CEs amb quarantenes"
   )
 
 # from here: https://learnui.design/tools/data-color-picker.html
