@@ -179,3 +179,7 @@ analytics_tag <- function() {
 </script>
 "
 }
+
+link_logo <- function() {
+  "https://www.projecteorbita.cat/wp-content/uploads/2020/02/logo_orbita_700x250-2.png"
+}
