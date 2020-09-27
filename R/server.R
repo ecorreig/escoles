@@ -189,7 +189,8 @@ server <- function(input, output, session) {
           rename_all(funs(c(new_school_names))),
         selection = "single",
         options = list(pageLength = 5,
-                       stateSave = TRUE)
+                       stateSave = TRUE),
+        rownames = F
       )
     )
   })
@@ -208,7 +209,8 @@ server <- function(input, output, session) {
           rename_all(funs(c(new_mun_names))),
         selection = "single",
         options = list(pageLength = 5,
-                       stateSave = TRUE)
+                       stateSave = TRUE),
+        rownames = F
       )
     )  
   })
