@@ -76,9 +76,9 @@ esc_popup <- function(esc) {
 orbita_popup <- "
 <p> Aquest mapa ha estat creat pel<a target='_blank' class='po-popup' href=''http://projecteorbita.cat'> Projecte Òrbita</a>, un equip d'investigació i desenvolupament que elabora eines de detecció de necessitats específiques d'aprenentatge. </p>
 
-<p> Aquest curs us oferim un seguiment continu de l'alumnat de la vostra escola, posant especial èmfasi en les vessats emocional i adaptatives, a més de la cognitiva, perquè pugueu fer un seguiment continu de l'estat d'ànim, la inclusió i l'aprenentatge dels infants i adolescents del vostre centre educatiu.</p>
+<p> Aquest curs us oferim a escoles i instituts un seguiment continu de l'alumnat del centre, posant especial èmfasi en les vessants emocional i adaptativa, a més de la cognitiva, perquè pugueu monitoritzar l'estat d'ànim, la inclusió i l'aprenentatge dels infants i adolescents del vostre centre educatiu.</p>
 
-<p>Si us interessa el què fem i voleu que vinguem a la vostra escola a presentar el projecte, escriviu-nos a info@projecteorbita.cat. </p>
+<p>Si us interessa el que fem i voleu que ens reunim amb la vostra escola o institut per presentar-vos el projecte, escriviu-nos a info@projecteorbita.cat. </p>
 
 <p>Esperem que us sigui d'utilitat!</p>
 <strong>Equip Òrbita </strong><br>
