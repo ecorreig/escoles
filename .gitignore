@@ -9,3 +9,4 @@ packrat
 .idea
 packrat/lib*/
 daily
+launcher.R
