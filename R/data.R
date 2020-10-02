@@ -106,8 +106,8 @@ update_data <- function() {
         TRUE ~ "Normalitat"
       ),
       `Grups en quarantena` = case_when(
-        is.na(GRUP_CONFIN) ~ 0,
-        TRUE ~ GRUP_CONFIN
+        is.na(GRUP_CONFIN) ~ 0.0,
+        TRUE ~ as.numeric(GRUP_CONFIN)
       ),
       DATAGENERACIO = lubridate::dmy_hm(DATAGENERACIO)
       
