@@ -89,7 +89,6 @@ server <- function(input, output, session) {
     q <- clean_schools()$Estat == "Grups en quarantena"
     norm_esc <- clean_schools()[norm | orb, ]
     q_esc <- clean_schools()[q | orb, ]
-    print(which(!(norm | q)) | orb)
     if (length(which(!(norm | q)))) {
       t_esc <- clean_schools()[which(!(norm | q)), ]
     } else {
