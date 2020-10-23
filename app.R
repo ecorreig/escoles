@@ -51,3 +51,5 @@ launchApp <- function (wd) {
   # Run
   shinyApp(ui = ui(), server = server)
 }
+
+launchApp(".")
