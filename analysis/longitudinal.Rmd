@@ -122,7 +122,7 @@ Ara fem el càlcul de a quantes persones contagia cada alumne. Per fer-ho, però
 
 ```{r}
 # how leaky are bubbles?
-leak <- 0.2
+leak <- .2
 
 correct_leak <- function(x, l) {
   l * (1 - x) + x
@@ -134,9 +134,6 @@ Fem un primer anàlisi ajuntant alumnes i mestres:
 ```{r}
 tam <- tt %>% 
   filter(population %in% c("total", "grup_confin"))
-```
-
-```{r}
 grups <- which(tam$population == "grup_confin")
 dur_ <- 10
 end_ <- ncol(tt) - dur_
@@ -175,5 +172,59 @@ fig <- fig %>% add_trace(y = ~ avg_5day, name = "7 day average", type = "scatter
 
 fig
 
+```
+
+Classifiquem els centres escolars en guarderies, escoles, instituts, escola-institut o altres:
+
+```{r}
+rho_df <- rho_df %>%
+  mutate(
+    tipus = case_when(
+      grepl("EPRI", Estudis) & grepl("ESO", Estudis) ~ "Institut-Escola",
+      grepl("EPRI", Estudis) ~ "Escola",
+      grepl("ESO", Estudis) ~ "Institut",
+      grepl("EINF2C", Estudis) | grepl("EINF2C", Estudis) ~ "Guarderia",
+      T ~ "Altres"
+    )
+  )
+```
+
+```{r}
+rho_average <- rho_df %>%
+  select(c((num_ + 1):end_, ncol(.))) %>%
+  dplyr::group_by(tipus) %>%
+  summarise_all(
+    function(x) mean(x, na.rm = T)
+  ) %>% 
+  pivot_longer(-tipus) %>%
+  pivot_wider(names_from = tipus, values_from = value) %>%
+  mutate_all(funs(zoo::na.locf))
+```
+
+```{r}
+fig <- plot_ly(rho_average, x = ~ name)
+fig <- fig %>% add_trace(y = ~ Escola, name = "Escola", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut, name = "Institut", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut-Escola, name = "Institut-Escola", type = "scatter", mode = "lines")
+# fig <- fig %>% add_trace(y = ~ Guarderia, name = "Guarderia", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Altres, name = "Altres", type = "scatter", mode = "lines")
+
+fig
+
+```
+
+Sense tants sotracs:
+
+```{r}
+dfm <- reshape2::melt(rho_average) %>%
+  mutate(
+    name = ymd(name)
+  ) %>%
+  filter(
+    variable != "Guarderia"
+  )
+ggplot(dfm, aes(x = name, y = value, colour = variable)) + 
+  geom_smooth(method = "loess", se = F) + 
+  theme_bw()
 ```
 
