@@ -61,14 +61,18 @@ df_schools <- import_covid_schools()
 ```{r}
 # format wide
 df <- df_schools %>% 
+  mutate_each_(
+    funs(as.numeric), 
+    c("personal_positiu_acum", "altres_positiu_acum", "alumn_positiu_acum", "grup_confin", "codcentre")
+  ) %>%
   mutate(
-    personal = as.numeric(personal_positiu_acum) + as.numeric(altres_positiu_acum),
-    alumnes = as.numeric(alumn_positiu_acum),
-    codcentre = as.numeric(codcentre)
+    total = personal_positiu_acum + altres_positiu_acum + alumn_positiu_acum,
+    personal = personal_positiu_acum + altres_positiu_acum,
+    alumnes = alumn_positiu_acum,
     
   ) %>%
   pivot_longer(
-    cols = c("personal_positiu_acum", "alumn_positiu_acum"),
+    cols = c("total", "personal", "alumnes", "grup_confin"),
     names_to = "population"
   ) %>%
   pivot_wider(
@@ -98,11 +102,12 @@ tot <- schools %>%
 # we have acc cases, we compute new cases
 tt <- tot
 num_ <- 35
+no_grup <- - which(tot$population == "grup_confin")
 for (i in (num_ + 1):ncol(tot)) {
-  tt[, i] <- tot[, i] - apply(tot[, num_:(i - 1)], 1, max)
+  tt[no_grup, i] <- tot[no_grup, i] - apply(tot[no_grup, num_:(i - 1)], 1, max)
 }
 # sometimes the acc cases are lower in the future, i guess they are errors and we set these -1 to 0
-tt[, num_:ncol(tt)] <- apply(tt[, num_:ncol(tt)], 2, function(x) ifelse(x < 0, 0, x))
+tt[no_grup, num_:ncol(tt)] <- apply(tt[no_grup, num_:ncol(tt)], 2, function(x) ifelse(x < 0, 0, x))
 ```
 
 # Càlcul rho0 intra centre
@@ -113,14 +118,40 @@ Assumim que els infants i adolescents poden ser contagiosos durant 14 dies despr
 
 *Nota:* potser s'haurà de fer alguna correcció pels festius.
 
-Si dos casos apareixen a la vegada assumim que un d'ells és un contagi de l'altre.
+Ara fem el càlcul de a quantes persones contagia cada alumne. Per fer-ho, però, hem de primer fer assumpcions sobre com d'estancs són els grups bombolla. El rang va de que hi ha 0 transmissió entre grups, és a dir, que cada cas en un altre grup confinat és un cas independent, fins a 1, que vol dir que no hi ha bombolles i que tots els casos d'una escola provenen del mateix cas índex. Evidentment la realitat marginal estarà en algun lloc de per aquí al mig, així que per ara fem un paràmetre per controlar aquest valor i ja mirarem d'ajustar-lo.
 
 ```{r}
+# how leaky are bubbles?
+leak <- 0.2
+
+correct_leak <- function(x, l) {
+  l * (1 - x) + x
+}
+```
+
+Fem un primer anàlisi ajuntant alumnes i mestres:
+
+```{r}
+tam <- tt %>% 
+  filter(population %in% c("total", "grup_confin"))
+```
+
+```{r}
+grups <- which(tam$population == "grup_confin")
 dur_ <- 10
-end <- ncol(tt) - dur_
-rho_df <- tt[, 1:end]
-for (i in (num_ + 1):end) {
-  rho_df[, i] <- ifelse(tt[, i] == 0, NA, rowSums(tt[, i:(i + dur_)]) - 1)
+end_ <- ncol(tt) - dur_
+tam <- as.data.frame(tam)
+rho_df <- tam[-grups, 1:end_]
+for (i in (num_ + 1):end_) {
+  rho_df[, i] <- ifelse(
+    tam[-grups, i] == 0,
+    NA,
+    (rowSums(tam[-grups, i:(i + dur_)]) - 1) / correct_leak(
+      apply(cbind(apply(tam[grups, i:(i + dur_)], 1, max), 
+                                                           rep(1, nrow(tam[grups, ]))), 1, max),
+    leak
+    )
+  )
 }
 ```
 
