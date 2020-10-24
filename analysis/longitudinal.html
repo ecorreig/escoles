@@ -2280,14 +2280,18 @@ import_covid_schools &lt;- function() {
 df_schools &lt;- import_covid_schools() </code></pre>
 <pre class="r"><code># format wide
 df &lt;- df_schools %&gt;% 
+  mutate_each_(
+    funs(as.numeric), 
+    c(&quot;personal_positiu_acum&quot;, &quot;altres_positiu_acum&quot;, &quot;alumn_positiu_acum&quot;, &quot;grup_confin&quot;, &quot;codcentre&quot;)
+  ) %&gt;%
   mutate(
-    personal = as.numeric(personal_positiu_acum) + as.numeric(altres_positiu_acum),
-    alumnes = as.numeric(alumn_positiu_acum),
-    codcentre = as.numeric(codcentre)
+    total = personal_positiu_acum + altres_positiu_acum + alumn_positiu_acum,
+    personal = personal_positiu_acum + altres_positiu_acum,
+    alumnes = alumn_positiu_acum,
     
   ) %&gt;%
   pivot_longer(
-    cols = c(&quot;personal_positiu_acum&quot;, &quot;alumn_positiu_acum&quot;),
+    cols = c(&quot;total&quot;, &quot;personal&quot;, &quot;alumnes&quot;, &quot;grup_confin&quot;),
     names_to = &quot;population&quot;
   ) %&gt;%
   pivot_wider(
@@ -2295,43 +2299,10 @@ df &lt;- df_schools %&gt;%
     names_from = datageneracio,
     values_from = value
     ) </code></pre>
-<pre class="r"><code># import general school data (the api is not correctly formatted, so i&#39;ll do i from the file)
-schools &lt;- readxl::read_xlsx(file.path(&quot;..&quot;, &quot;data&quot;, &quot;escoles_base.xlsx&quot;)) %&gt;%
-  filter(`Codi centre` != 1) </code></pre>
-<pre class="r"><code># merge school and covid school data
-tot &lt;- schools %&gt;%
-  left_join(df,
-            by = c(&quot;Codi centre&quot; = &quot;codcentre&quot;),
-            suffix = c(&quot;&quot;, &quot;&quot;)) %&gt;%
-  mutate_at(35:ncol(.), as.numeric)</code></pre>
-<pre class="r"><code># we have acc cases, we compute new cases
-tt &lt;- tot
-num_ &lt;- 35
-for (i in (num_ + 1):ncol(tot)) {
-  tt[, i] &lt;- tot[, i] - apply(tot[, num_:(i - 1)], 1, max)
-}
-# sometimes the acc cases are lower in the future, i guess they are errors and we set these -1 to 0
-tt[, num_:ncol(tt)] &lt;- apply(tt[, num_:ncol(tt)], 2, function(x) ifelse(x &lt; 0, 0, x))</code></pre>
-<div id="càlcul-rho0-intra-centre" class="section level1">
-<h1>Càlcul rho0 intra centre</h1>
-<p>En aquets apartat mirem, després de que aparegui un cas en un centre, quants altres n’apareixen, que assumim que són contagis d’aquest primer. Això és una assumpció forta i estarà violada aleatòriament, però com a primera aproximació ens serà útil:</p>
-<p>Assumim que els infants i adolescents poden ser contagiosos durant 14 dies després d’emmalaltir. Això és equivalent a 10 dies laborables, que és en el format que tenim les dades.</p>
-<p><em>Nota:</em> potser s’haurà de fer alguna correcció pels festius.</p>
-<p>Si dos casos apareixen a la vegada assumim que un d’ells és un contagi de l’altre.</p>
-<pre class="r"><code>dur_ &lt;- 10
-end &lt;- ncol(tt) - dur_
-rho_df &lt;- tt[, 1:end]
-for (i in (num_ + 1):end) {
-  rho_df[, i] &lt;- ifelse(tt[, i] == 0, NA, rowSums(tt[, i:(i + dur_)]) - 1)
-}</code></pre>
-<p>Fem la mitjana:</p>
-<pre class="r"><code># remove the first point because it&#39;s weird
-rho_average &lt;- as.data.frame(apply(rho_df[, (num_ + 1):end], 2, function(x) mean(x, na.rm = T))) %&gt;% 
-  rename_all(funs(c(&quot;rho&quot;))) %&gt;%
-  mutate(
-    date = rownames(.),
-    avg_5day = zoo::rollmean(rho, 5, fill = NA, align = &quot;right&quot;)
-  )</code></pre>
+<pre><code>## Warning: `mutate_each_()` is deprecated as of dplyr 0.7.0.
+## Please use `across()` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
 <pre><code>## Warning: `funs()` is deprecated as of dplyr 0.8.0.
 ## Please use a list of either functions or lambdas: 
 ## 
@@ -2345,6 +2316,63 @@ rho_average &lt;- as.data.frame(apply(rho_df[, (num_ + 1):end], 2, function(x) m
 ##   list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
 ## This warning is displayed once every 8 hours.
 ## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<pre class="r"><code># import general school data (the api is not correctly formatted, so i&#39;ll do i from the file)
+schools &lt;- readxl::read_xlsx(file.path(&quot;..&quot;, &quot;data&quot;, &quot;escoles_base.xlsx&quot;)) %&gt;%
+  filter(`Codi centre` != 1) </code></pre>
+<pre class="r"><code># merge school and covid school data
+tot &lt;- schools %&gt;%
+  left_join(df,
+            by = c(&quot;Codi centre&quot; = &quot;codcentre&quot;),
+            suffix = c(&quot;&quot;, &quot;&quot;)) %&gt;%
+  mutate_at(35:ncol(.), as.numeric)</code></pre>
+<pre class="r"><code># we have acc cases, we compute new cases
+tt &lt;- tot
+num_ &lt;- 35
+no_grup &lt;- - which(tot$population == &quot;grup_confin&quot;)
+for (i in (num_ + 1):ncol(tot)) {
+  tt[no_grup, i] &lt;- tot[no_grup, i] - apply(tot[no_grup, num_:(i - 1)], 1, max)
+}
+# sometimes the acc cases are lower in the future, i guess they are errors and we set these -1 to 0
+tt[no_grup, num_:ncol(tt)] &lt;- apply(tt[no_grup, num_:ncol(tt)], 2, function(x) ifelse(x &lt; 0, 0, x))</code></pre>
+<div id="càlcul-rho0-intra-centre" class="section level1">
+<h1>Càlcul rho0 intra centre</h1>
+<p>En aquets apartat mirem, després de que aparegui un cas en un centre, quants altres n’apareixen, que assumim que són contagis d’aquest primer. Això és una assumpció forta i estarà violada aleatòriament, però com a primera aproximació ens serà útil:</p>
+<p>Assumim que els infants i adolescents poden ser contagiosos durant 14 dies després d’emmalaltir. Això és equivalent a 10 dies laborables, que és en el format que tenim les dades.</p>
+<p><em>Nota:</em> potser s’haurà de fer alguna correcció pels festius.</p>
+<p>Ara fem el càlcul de a quantes persones contagia cada alumne. Per fer-ho, però, hem de primer fer assumpcions sobre com d’estancs són els grups bombolla. El rang va de que hi ha 0 transmissió entre grups, és a dir, que cada cas en un altre grup confinat és un cas independent, fins a 1, que vol dir que no hi ha bombolles i que tots els casos d’una escola provenen del mateix cas índex. Evidentment la realitat marginal estarà en algun lloc de per aquí al mig, així que per ara fem un paràmetre per controlar aquest valor i ja mirarem d’ajustar-lo.</p>
+<pre class="r"><code># how leaky are bubbles?
+leak &lt;- 0.2
+
+correct_leak &lt;- function(x, l) {
+  l * (1 - x) + x
+}</code></pre>
+<p>Fem un primer anàlisi ajuntant alumnes i mestres:</p>
+<pre class="r"><code>tam &lt;- tt %&gt;% 
+  filter(population %in% c(&quot;total&quot;, &quot;grup_confin&quot;))</code></pre>
+<pre class="r"><code>grups &lt;- which(tam$population == &quot;grup_confin&quot;)
+dur_ &lt;- 10
+end_ &lt;- ncol(tt) - dur_
+tam &lt;- as.data.frame(tam)
+rho_df &lt;- tam[-grups, 1:end_]
+for (i in (num_ + 1):end_) {
+  rho_df[, i] &lt;- ifelse(
+    tam[-grups, i] == 0,
+    NA,
+    (rowSums(tam[-grups, i:(i + dur_)]) - 1) / correct_leak(
+      apply(cbind(apply(tam[grups, i:(i + dur_)], 1, max), 
+                                                           rep(1, nrow(tam[grups, ]))), 1, max),
+    leak
+    )
+  )
+}</code></pre>
+<p>Fem la mitjana:</p>
+<pre class="r"><code># remove the first point because it&#39;s weird
+rho_average &lt;- as.data.frame(apply(rho_df[, (num_ + 1):end_], 2, function(x) mean(x, na.rm = T))) %&gt;% 
+  rename_all(funs(c(&quot;rho&quot;))) %&gt;%
+  mutate(
+    date = rownames(.),
+    avg_5day = zoo::rollmean(rho, 5, fill = NA, align = &quot;right&quot;)
+  )</code></pre>
 <pre class="r"><code>fig &lt;- plot_ly(rho_average, x = ~ date)
 fig &lt;- fig %&gt;% add_trace(y = ~ rho, name = &quot;Rho mitjana&quot;, type = &quot;scatter&quot;, mode = &quot;lines&quot;)
 fig &lt;- fig %&gt;% add_trace(y = ~ avg_5day, name = &quot;7 day average&quot;, type = &quot;scatter&quot;, mode = &quot;lines&quot;)
@@ -2355,8 +2383,8 @@ fig</code></pre>
 ## See vignette(&#39;programming&#39;) for more help
 ## This warning is displayed once every 8 hours.
 ## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
-<div id="htmlwidget-b19d2dd641a8330e100d" style="width:672px;height:480px;" class="plotly html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b19d2dd641a8330e100d">{"x":{"visdat":{"2e7c64204874":["function () ","plotlyVisDat"]},"cur_data":"2e7c64204874","attrs":{"2e7c64204874":{"x":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"y":{},"name":"Rho mitjana","type":"scatter","mode":"lines","inherit":true},"2e7c64204874.1":{"x":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"y":{},"name":"7 day average","type":"scatter","mode":"lines","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"date","type":"category","categoryorder":"array","categoryarray":["2020-09-24","2020-09-25","2020-09-26","2020-09-28","2020-09-29","2020-09-30","2020-10-01","2020-10-02","2020-10-03","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"rho"},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"x":["2020-09-24","2020-09-25","2020-09-26","2020-09-28","2020-09-29","2020-09-30","2020-10-01","2020-10-02","2020-10-03","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"],"y":[2.03614457831325,1.8972602739726,2.06763285024155,2.13230769230769,2.8,2.35971223021583,2.36216216216216,2.675,2.6027397260274,3.29131652661064,3.90740740740741,3.6318407960199,3.77727272727273,4.37190082644628,4.16546762589928],"name":"Rho mitjana","type":"scatter","mode":"lines","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["2020-09-29","2020-09-30","2020-10-01","2020-10-02","2020-10-03","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"],"y":[2.18666907896702,2.25138260934753,2.34436298698545,2.46583641693714,2.55992282368108,2.65818612900321,2.96772516444152,3.22166089121307,3.44211543666762,3.79594765675139,3.97077787660912],"name":"7 day average","type":"scatter","mode":"lines","marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"line":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-6eba5c9af3d5eb2cb11f" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-6eba5c9af3d5eb2cb11f">{"x":{"visdat":{"3bdc674b2d09":["function () ","plotlyVisDat"]},"cur_data":"3bdc674b2d09","attrs":{"3bdc674b2d09":{"x":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"y":{},"name":"Rho mitjana","type":"scatter","mode":"lines","inherit":true},"3bdc674b2d09.1":{"x":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"y":{},"name":"7 day average","type":"scatter","mode":"lines","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":"date","type":"category","categoryorder":"array","categoryarray":["2020-09-24","2020-09-25","2020-09-26","2020-09-28","2020-09-29","2020-09-30","2020-10-01","2020-10-02","2020-10-03","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"rho"},"hovermode":"closest","showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"x":["2020-09-24","2020-09-25","2020-09-26","2020-09-28","2020-09-29","2020-09-30","2020-10-01","2020-10-02","2020-10-03","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"],"y":[1.2325037353798,1.10306228706365,1.21056177163371,1.1516284440056,1.31515767539391,1.29100817478185,1.34198987737703,1.54830348884813,1.43599603122276,1.84165489367509,2.16927297194554,1.92740221651686,1.9728189788595,2.03095613467871,2.03170297726569],"name":"Rho mitjana","type":"scatter","mode":"lines","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["2020-09-29","2020-09-30","2020-10-01","2020-10-02","2020-10-03","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"],"y":[1.20258278269534,1.21428367057575,1.26206918863842,1.32961753208131,1.38649104952474,1.49179049318097,1.66744345261371,1.78452592044168,1.86942901844395,1.98842103913514,2.02643065585326],"name":"7 day average","type":"scatter","mode":"lines","marker":{"color":"rgba(255,127,14,1)","line":{"color":"rgba(255,127,14,1)"}},"error_y":{"color":"rgba(255,127,14,1)"},"error_x":{"color":"rgba(255,127,14,1)"},"line":{"color":"rgba(255,127,14,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 </div>
 
 

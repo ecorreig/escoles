@@ -159,7 +159,7 @@ Fem la mitjana:
 
 ```{r}
 # remove the first point because it's weird
-rho_average <- as.data.frame(apply(rho_df[, (num_ + 1):end], 2, function(x) mean(x, na.rm = T))) %>% 
+rho_average <- as.data.frame(apply(rho_df[, (num_ + 1):end_], 2, function(x) mean(x, na.rm = T))) %>% 
   rename_all(funs(c("rho"))) %>%
   mutate(
     date = rownames(.),
