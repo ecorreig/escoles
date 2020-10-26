@@ -2,7 +2,10 @@
 title: "Anàlisis evolució COVID19 escoles"
 author: "Projecte Òrbita"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output:
+  md_document:
+    variant: markdown_github
+
 ---
 
 ```{r setup, include=FALSE}
@@ -19,6 +22,13 @@ proj_dir <- rstudioapi::getActiveProject()
 source(file.path(proj_dir, "R", "calcs.R"), encoding = enc)
 source(file.path(proj_dir, "R", "data.R"), encoding = enc)
 source(file.path(proj_dir, "R", "calc_funcs.R"), encoding = enc)
+```
+
+```{r}
+# define vars
+start_schools <- ymd("2020-09-14")
+today <- today()
+correction <- 3
 ```
 
 ```{r}
@@ -62,7 +72,7 @@ df <- df_schools %>%
 
 ```{r}
 # import general school data (the api is not correctly formatted, so i'll do i from the file)
-schools <- readxl::read_xlsx(file.path("..", "data", "escoles_base.xlsx")) %>%
+schools <- readxl::read_xlsx(file.path(proj_dir, "data", "escoles_base.xlsx")) %>%
   filter(`Codi centre` != 1) 
 ```
 
@@ -87,9 +97,9 @@ for (i in (num_ + 1):ncol(tot)) {
 tt[no_grup, num_:ncol(tt)] <- apply(tt[no_grup, num_:ncol(tt)], 2, function(x) ifelse(x < 0, 0, x))
 ```
 
-# Càlcul rho0 intra centre
+# Càlcul $\rho_0$ intra centre
 
-En aquets apartat mirem, després de que aparegui un cas en un centre, quants altres n'apareixen, que assumim que són contagis d'aquest primer. Això és una assumpció forta i estarà violada aleatòriament, però com a primera aproximació ens serà útil:
+En aquest apartat mirem, després de que aparegui un cas en una classe, quants altres n'apareixen, que assumim que són contagis d'aquest primer. Això és una assumpció que serà violada aleatòriament, però creiem que no tindrà molt d'efecte, ja que, com es pot veure en els càlculs de probabilitats dels mapes, les probabilitats de que hi hagi dos casos independents dins d'una mateixa classe són molt petites.
 
 Assumim que els infants i adolescents poden ser contagiosos durant 14 dies després d'emmalaltir. Això és equivalent a 10 dies laborables, que és en el format que tenim les dades.
 
@@ -147,8 +157,10 @@ temp_rho <- as.data.frame(apply(rho_df[, (num_ + 1):end_], 2, function(x) mean(x
 ```{r}
 fig <- plot_ly(temp_rho, x = ~ date)
 fig <- fig %>% add_trace(y = ~ school, name = "Rho mitjana", type = "scatter", mode = "lines")
-fig <- fig %>% add_trace(y = ~ avg_5day, name = "7 day average", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Evolució de la rho als centres educatius",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
 fig
 
 ```
@@ -186,10 +198,12 @@ rho_average <- rho_df %>%
 fig <- plot_ly(rho_average, x = ~ name)
 fig <- fig %>% add_trace(y = ~ Escola, name = "Escola", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ Institut, name = "Institut", type = "scatter", mode = "lines")
-fig <- fig %>% add_trace(y = ~ Institut-Escola, name = "Institut-Escola", type = "scatter", mode = "lines")
-# fig <- fig %>% add_trace(y = ~ Guarderia, name = "Guarderia", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ `Institut-Escola`, name = "Institut-Escola", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ Altres, name = "Altres", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Evolució de la rho als centres educatius segons el tipus",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
 fig
 
 ```
@@ -239,16 +253,16 @@ fig <- fig %>% add_trace(y = ~ alumnes, name = "Alumnes", type = "scatter", mode
 fig <- fig %>% add_trace(y = ~ personal, name = "Personal", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ grup_confin, name = "Grups confinats", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Evolució dels confinaments i casos positius",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+
 fig
 ```
 
 Fixem-nos que totes les corbes són inicis d'exponencials, que ja ens fa pensar que anem ben encaminats amb models SIR.
 
 Fem el cas dels alumnes, que és segurament el més robust en tenir tants casos:
-
-```{r}
-library(fitR)
-```
 
 ```{r}
 data(SIR)
@@ -258,7 +272,6 @@ init.state <- c(S = pop, I = 1110, R = round(pop * .05))
 times <- 1:100
 traj <- SIR$simulate(theta, init.state, times)
 ```
-
 
 ```{r}
 epi <- df_sir %>%
@@ -280,18 +293,11 @@ ggplot(epi, aes(x = time, y = total)) +
 
 Aquest gràfic ens mostra que el ritme de contagis és l'esperable en un model SIR amb $\rho_0 = 1.275$. Aquest és un model sobre-simplificat perquè sabem que la rho ha estat pujant aquests últims dies. A més, amb només aquesta informació no sabem si els contagis són dins de l'escola o simplement reflecteixen la $\rho_0$ de fora de la població general. En tot cas, sí que mostra que la $\rho_0$ efectiva a les escoles sempre ha sigut més alta que la reportada per la població general, per tant podem afirmar que aquestes han estat actuant com a acceledores de la pandèmia. Si són les acceledarores principals o no, ho intentarem esbrinar en el següent apartat.
 
-Abans, però, notem que el valor màxim d'aquesta corba projectada és `r round(max(traj$I))`, que serien el nombre d'infants i adolescents que es contagiarien segons aquest model. Segons aquest model, el màxim seria el dia `start_schools + which.max(traj$I)`. Hem de tenir en compte que aquí es nota força que les dades són de 12 dies enrere, i per tant aquest model segurament evolucioni amb el temps. 
+Abans, però, notem que el valor màxim d'aquesta corba projectada és `r round(max(traj$I))`, que serien el nombre d'infants i adolescents que es contagiarien segons aquest model. Segons aquest model, el màxim seria el dia `r start_schools + which.max(traj$I)`. Hem de tenir en compte que aquí es nota força que les dades són de 10 dies enrere, i per tant aquest model segurament evolucioni amb el temps. 
 
 # Rho escoles en relació a la rho total
 
 Per acabar, mirem quin percentatge de la $\rho_0$ total és causat per les escoles. Per fer-ho, compararem el valor escolar que hem mesurat prèviament amb el valor poblacional que calculem a partir de les dades poblacionals. Noteu que els càlculs de la $\rho_0$ dins de les escoles i a la població són diferents per raons òbvies, però assumirem que es poden comparar.
-
-```{r}
-# define vars
-start_schools <- ymd("2020-09-14")
-today <- today()
-correction <- 3
-```
 
 ```{r}
 # get population covid data
@@ -352,6 +358,10 @@ fig <- fig %>% add_trace(y = ~ Escola, name = "Escola", type = "scatter", mode =
 fig <- fig %>% add_trace(y = ~ Institut, name = "Institut", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ `Institut-Escola`, name = "Institut-Escola", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+
 fig
 ```
 
@@ -409,7 +419,7 @@ m_rhos <- m_rhos %>%
 
 Ara imaginem que la $\rho_0$ a les escoles fos 0 (cosa que no seria certa perquè també hi estem entrant casos que provenen de fora, però només per fer l'exercici teòric), mirem com seria la nova $\rho_0$ poblacional. L'equació que les lliga és:
 
-\[ \rho_T = \frac{\rho_E r + \rho_P}{1 + r} \], o, aïllant $\rho_P$, que és la que ens interessa ara:
+\[ \rho_T = \frac{\rho_E \cdot r + \rho_P}{1 + r} \], o, aïllant $\rho_P$, que és la que ens interessa ara:
 
 \[ \rho_P = (1 + r) \rho_T - r\rho_E \], on
 
@@ -445,6 +455,10 @@ fig <- fig %>% add_trace(y = ~ rho, name = "Rho total", type = "scatter", mode =
 fig <- fig %>% add_trace(y = ~ school, name = "Rho centres escolars", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ rho_p, name = "Rho població", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+
 fig
 ```
 
@@ -467,6 +481,9 @@ fig <- fig %>% add_trace(y = ~ rho, name = "Rho total", type = "scatter", mode =
 fig <- fig %>% add_trace(y = ~ Institut, name = "Rho instituts", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ rho_p, name = "Rho població", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
 fig
 ```
 
@@ -479,6 +496,9 @@ fig <- plot_ly(tt, x = ~ date)
 fig <- fig %>% add_trace(y = ~ per_p, name = "Contribució població", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ per_e, name = "Contribució centres escolars", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Contribució a la rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
 fig
 ```
 
@@ -489,5 +509,20 @@ fig <- plot_ly(tti, x = ~ date)
 fig <- fig %>% add_trace(y = ~ per_p, name = "Contribució població", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ per_e, name = "Contribució instituts", type = "scatter", mode = "lines")
 
+fig <- fig %>% layout(title = "Contribució a la rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
 fig
 ```
+
+# Conclusions
+
+## Efecte notable però no determinant
+
+L'efecte dels centres escolars en la pandèmia ha sigut notable, incrementant la rho mitjana de Catalunya en entre 0.05 i 0.21 punts al llarg del mes que han estat obertes; incrementant-se aquest valor els últims dies. No tenim les $\rho$s causades per altres causes, però creiem que aquests valors dels centres escolars no són els que afecten més a la $\rho$ total. Aquests valors segurament varien molt entre regions, ja que n'hi ha que tenen molta més incidència que altres, per en aquest primer estudi ho ajuntem tot.
+
+Aquí també tenim una limitació notable, que és que no sabem exactament quin ha sigut el valor de la transmissió entre bombolles. Els resultats són força depenents d'aquest factor (les rhos respectives es poden multiplicar fins a per 2.5) i necessitaríem més dades per poder ajustar millor els valors. 
+
+## Escola vs Institut
+
+En aquest anàlisi confirmem allò que ja hem estat veient aquests dies, amb dades per exemple provinents d'Isreal, que les escoles **no** es comporten com focus significatiu de contagis, però en canvi els instituts **sí**. És per això que creiem que una actuació molt clarament necessària a curt termini és eliminar la presencialitat en tots els estudis per a majors de 12 anys. En canvi, si durant els propers dies no canvia la tendència de les escoles, aquestes podrien mantenir-se obertes, com a mínim en aquelles zones on la incidència no sigui aclaparadora. 
