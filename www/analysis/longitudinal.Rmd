@@ -3,9 +3,8 @@ title: "Anàlisis evolució COVID19 escoles"
 author: "Projecte Òrbita"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  md_document:
-    variant: markdown_github
-
+  html_document:
+    mathjax: "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 ---
 
 ```{r setup, include=FALSE}
@@ -251,7 +250,7 @@ Dibuixem tots:
 fig <- plot_ly(df_sir, x = ~ name)
 fig <- fig %>% add_trace(y = ~ alumnes, name = "Alumnes", type = "scatter", mode = "lines")
 fig <- fig %>% add_trace(y = ~ personal, name = "Personal", type = "scatter", mode = "lines")
-fig <- fig %>% add_trace(y = ~ grup_confin, name = "Grups confinats", type = "scatter", mode = "lines")
+# fig <- fig %>% add_trace(y = ~ grup_confin, name = "Grups confinats", type = "scatter", mode = "lines")
 
 fig <- fig %>% layout(title = "Evolució dels confinaments i casos positius",
                       yaxis = list(title = ""),
