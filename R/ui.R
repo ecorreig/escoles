@@ -172,7 +172,7 @@ ui <- function() {
                )
              )),
     tabPanel("Estudi longitudinal",
-             tags$iframe(src = 'analysis/longitudinal.html',
+             tags$iframe(src = 'www/analysis/longitudinal.html',
                          width = '100%', height = '800px', 
                          frameborder = 0, scrolling = 'auto')),
     tabPanel("Documentació",
