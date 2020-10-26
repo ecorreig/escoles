@@ -98,7 +98,7 @@ tt[no_grup, num_:ncol(tt)] <- apply(tt[no_grup, num_:ncol(tt)], 2, function(x) i
 
 # Càlcul $\rho_0$ intra centre
 
-En aquest apartat mirem, després de que aparegui un cas en una classe, quants altres n'apareixen, que assumim que són contagis d'aquest primer. Això és una assumpció que serà violada aleatòriament, però creiem que no tindrà molt d'efecte, ja que, com es pot veure en els càlculs de probabilitats dels mapes, les probabilitats de que hi hagi dos casos independents dins d'una mateixa classe són molt petites.
+En aquest apartat mirem, després de que detectem un cas en una classe, quants altres n'apareixen, que assumim que són contagis d'aquest primer. Això és una assumpció que serà violada aleatòriament, però creiem que no tindrà molt d'efecte, ja que, com es pot veure en els càlculs de probabilitats dels mapes, les probabilitats de que hi hagi dos casos independents dins d'una mateixa classe són molt petites.
 
 Assumim que els infants i adolescents poden ser contagiosos durant 14 dies després d'emmalaltir. Això és equivalent a 10 dies laborables, que és en el format que tenim les dades.
 
