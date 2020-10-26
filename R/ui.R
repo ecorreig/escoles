@@ -171,6 +171,10 @@ ui <- function() {
                  tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
                )
              )),
+    tabPanel("Estudi longitudinal",
+             tags$iframe(src = 'analysis/longitudinal.html',
+                         width = '100%', height = '800px', 
+                         frameborder = 0, scrolling = 'auto')),
     tabPanel("Documentació",
              fluidRow(column(width = 2, ""), column(width = 8, uiOutput("docs")), column(width = 2, ""))),
     tabPanel("Qui som", fluidRow(column(width = 2, ""), column(width = 8, uiOutput("quisom")), column(width = 2, ""))),

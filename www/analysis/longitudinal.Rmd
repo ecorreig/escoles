@@ -1,0 +1,527 @@
+---
+title: "Anàlisis evolució COVID19 escoles"
+author: "Projecte Òrbita"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    mathjax: "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+library(lubridate)
+library(RSocrata)
+library(dplyr)
+library(tidyr)
+library(plotly)
+library(fitR)
+library(readxl)
+enc <- "UTF-8"
+proj_dir <- rstudioapi::getActiveProject()
+source(file.path(proj_dir, "R", "calcs.R"), encoding = enc)
+source(file.path(proj_dir, "R", "data.R"), encoding = enc)
+source(file.path(proj_dir, "R", "calc_funcs.R"), encoding = enc)
+```
+
+```{r}
+# define vars
+start_schools <- ymd("2020-09-14")
+today <- today()
+correction <- 3
+```
+
+```{r}
+# get school covid adta
+import_covid_schools <- function() {
+  q <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
+  read.socrata(q, stringsAsFactors = F) %>%
+    mutate(
+      datageneracio = as.character(datageneracio)
+    ) %>%
+    select(-datacreacio)
+}
+
+df_schools <- import_covid_schools() 
+```
+
+```{r}
+# format wide
+df <- df_schools %>% 
+  mutate_each_(
+    funs(as.numeric), 
+    c("personal_positiu_acum", "altres_positiu_acum", "alumn_positiu_acum", "grup_confin", "codcentre")
+  ) %>%
+  mutate(
+    total = personal_positiu_acum + altres_positiu_acum + alumn_positiu_acum,
+    personal = personal_positiu_acum + altres_positiu_acum,
+    alumnes = alumn_positiu_acum,
+    
+  ) %>%
+  pivot_longer(
+    cols = c("total", "personal", "alumnes", "grup_confin"),
+    names_to = "population"
+  ) %>%
+  pivot_wider(
+    id_cols = c("codcentre", "population"),
+    names_from = datageneracio,
+    values_from = value
+    ) 
+```
+
+
+```{r}
+# import general school data (the api is not correctly formatted, so i'll do i from the file)
+schools <- readxl::read_xlsx(file.path(proj_dir, "data", "escoles_base.xlsx")) %>%
+  filter(`Codi centre` != 1) 
+```
+
+```{r}
+# merge school and covid school data
+tot <- schools %>%
+  left_join(df,
+            by = c("Codi centre" = "codcentre"),
+            suffix = c("", "")) %>%
+  mutate_at(35:ncol(.), as.numeric)
+```
+
+```{r}
+# we have acc cases, we compute new cases
+tt <- tot
+num_ <- 35
+no_grup <- - which(tot$population == "grup_confin")
+for (i in (num_ + 1):ncol(tot)) {
+  tt[no_grup, i] <- tot[no_grup, i] - apply(tot[no_grup, num_:(i - 1)], 1, max)
+}
+# sometimes the acc cases are lower in the future, i guess they are errors and we set these -1 to 0
+tt[no_grup, num_:ncol(tt)] <- apply(tt[no_grup, num_:ncol(tt)], 2, function(x) ifelse(x < 0, 0, x))
+```
+
+# Càlcul $\rho_0$ intra centre
+
+En aquest apartat mirem, després de que aparegui un cas en una classe, quants altres n'apareixen, que assumim que són contagis d'aquest primer. Això és una assumpció que serà violada aleatòriament, però creiem que no tindrà molt d'efecte, ja que, com es pot veure en els càlculs de probabilitats dels mapes, les probabilitats de que hi hagi dos casos independents dins d'una mateixa classe són molt petites.
+
+Assumim que els infants i adolescents poden ser contagiosos durant 14 dies després d'emmalaltir. Això és equivalent a 10 dies laborables, que és en el format que tenim les dades.
+
+*Nota:* potser s'haurà de fer alguna correcció pels festius.
+
+Ara fem el càlcul de a quantes persones contagia cada alumne. Per fer-ho, però, hem de primer fer assumpcions sobre com d'estancs són els grups bombolla. El rang va de que hi ha 0 transmissió entre grups, és a dir, que cada cas en un altre grup confinat és un cas independent, fins a 1, que vol dir que no hi ha bombolles i que tots els casos d'una escola provenen del mateix cas índex. Evidentment la realitat marginal estarà en algun lloc de per aquí al mig, així que per ara fem un paràmetre per controlar aquest valor i ja mirarem d'ajustar-lo.
+
+```{r}
+# how leaky are bubbles?
+leak <- .2
+
+correct_leak <- function(x, l) {
+  l * (1 - x) + x
+}
+```
+
+Fem un primer anàlisi amb aquest valor a `r leak`, és a dir, que un `r leak * 100`% dels contagis fora del grup classe són culpa de contagis entre grups bombolla.
+
+Fem un primer anàlisi ajuntant alumnes i mestres:
+
+```{r}
+tam <- tt %>% 
+  filter(population %in% c("total", "grup_confin"))
+grups <- which(tam$population == "grup_confin")
+dur_ <- 10
+end_ <- ncol(tt) - dur_
+tam <- as.data.frame(tam)
+rho_df <- tam[-grups, 1:end_]
+for (i in (num_ + 1):end_) {
+  rho_df[, i] <- ifelse(
+    tam[-grups, i] == 0,
+    NA,
+    (rowSums(tam[-grups, i:(i + dur_)]) - 1) / correct_leak(
+      apply(cbind(apply(tam[grups, i:(i + dur_)], 1, max), 
+                                                           rep(1, nrow(tam[grups, ]))), 1, max),
+    leak
+    )
+  )
+}
+```
+
+Fem la mitjana:
+
+```{r}
+# remove the first point because it's weird
+temp_rho <- as.data.frame(apply(rho_df[, (num_ + 1):end_], 2, function(x) mean(x, na.rm = T))) %>% 
+  rename_all(funs(c("school"))) %>%
+  mutate(
+    date = ymd(rownames(.)),
+    avg_5day = zoo::rollmean(school, 5, fill = NA, align = "right")
+  )
+
+```
+
+```{r}
+fig <- plot_ly(temp_rho, x = ~ date)
+fig <- fig %>% add_trace(y = ~ school, name = "Rho mitjana", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Evolució de la rho als centres educatius",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+
+```
+
+Classifiquem els centres escolars en guarderies, escoles, instituts, escola-institut o altres.
+
+*Nota:* traiem les guarderies a partir d'ara perquè es comporten de forma molt estranya.
+
+```{r}
+rho_df <- rho_df %>%
+  mutate(
+    tipus = case_when(
+      grepl("EPRI", Estudis) & grepl("ESO", Estudis) ~ "Institut-Escola",
+      grepl("EPRI", Estudis) ~ "Escola",
+      grepl("ESO", Estudis) ~ "Institut",
+      grepl("EINF2C", Estudis) | grepl("EINF2C", Estudis) ~ "Guarderia",
+      T ~ "Altres"
+    )
+  )
+```
+
+```{r}
+rho_average <- rho_df %>%
+  select(c((num_ + 1):end_, ncol(.))) %>%
+  dplyr::group_by(tipus) %>%
+  summarise_all(
+    function(x) mean(x, na.rm = T)
+  ) %>% 
+  pivot_longer(-tipus) %>%
+  pivot_wider(names_from = tipus, values_from = value) %>%
+  mutate_all(funs(zoo::na.locf))
+```
+
+```{r}
+fig <- plot_ly(rho_average, x = ~ name)
+fig <- fig %>% add_trace(y = ~ Escola, name = "Escola", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut, name = "Institut", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ `Institut-Escola`, name = "Institut-Escola", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Altres, name = "Altres", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Evolució de la rho als centres educatius segons el tipus",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+
+```
+
+Sense tants sotracs:
+
+```{r}
+dfm <- reshape2::melt(rho_average) %>%
+  mutate(
+    name = ymd(name)
+  ) %>%
+  filter(
+    variable != "Guarderia"
+  )
+ggplot(dfm, aes(x = name, y = value, colour = variable)) + 
+  geom_smooth(method = "loess", se = F) + 
+  theme_bw()
+```
+
+Així doncs, veiem que la rho 0 s'ha trobat per sobre d'1 durant gairebé tot el període, sent especialment preocupant en els instituts i els instituts escola, on, encara que les bombolles s'haguessin matingut, arribem a valors per sobre del 2 aquests últims dies. 
+
+# Model SIR
+
+Ajustem un model SIR al nombre de casos per tal de trobar aquesta rho 0 de forma teòrica:
+
+```{r}
+df_sir <- tt %>% 
+  pivot_longer(cols = 35:ncol(.)) %>%
+  dplyr::group_by(name, population) %>%
+  summarise_at("value", sum, na.rm = T) %>%
+  filter(!is.na(population)) %>%
+  group_by(population) %>%
+  dplyr::arrange(name) %>%
+  mutate(
+    acc = cumsum(value),
+    name = ymd(name)
+    ) %>% 
+  select(-value) %>% 
+  pivot_wider(names_from = population, values_from = acc)
+```
+
+Dibuixem tots:
+
+```{r}
+fig <- plot_ly(df_sir, x = ~ name)
+fig <- fig %>% add_trace(y = ~ alumnes, name = "Alumnes", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ personal, name = "Personal", type = "scatter", mode = "lines")
+# fig <- fig %>% add_trace(y = ~ grup_confin, name = "Grups confinats", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Evolució dels confinaments i casos positius",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+
+fig
+```
+
+Fixem-nos que totes les corbes són inicis d'exponencials, que ja ens fa pensar que anem ben encaminats amb models SIR.
+
+Fem el cas dels alumnes, que és segurament el més robust en tenir tants casos:
+
+```{r}
+data(SIR)
+theta <- c(R0 = 1.275, D_inf = 2)
+pop <- 1600000
+init.state <- c(S = pop, I = 1110, R = round(pop * .05))
+times <- 1:100
+traj <- SIR$simulate(theta, init.state, times)
+```
+
+```{r}
+epi <- df_sir %>%
+  mutate(
+    time = 1:nrow(.),
+    obs = total
+  ) %>%
+  select(time, total) %>%
+  full_join(traj)
+```
+
+```{r}
+ggplot(epi, aes(x = time, y = total)) +
+  geom_point() + 
+  xlim(c(1, 50)) +
+  geom_line(aes(y = I), colour = "red") +
+  theme_bw()
+```
+
+Aquest gràfic ens mostra que el ritme de contagis és l'esperable en un model SIR amb $\rho_0 = 1.275$. Aquest és un model sobre-simplificat perquè sabem que la rho ha estat pujant aquests últims dies. A més, amb només aquesta informació no sabem si els contagis són dins de l'escola o simplement reflecteixen la $\rho_0$ de fora de la població general. En tot cas, sí que mostra que la $\rho_0$ efectiva a les escoles sempre ha sigut més alta que la reportada per la població general, per tant podem afirmar que aquestes han estat actuant com a acceledores de la pandèmia. Si són les acceledarores principals o no, ho intentarem esbrinar en el següent apartat.
+
+Abans, però, notem que el valor màxim d'aquesta corba projectada és `r round(max(traj$I))`, que serien el nombre d'infants i adolescents que es contagiarien segons aquest model. Segons aquest model, el màxim seria el dia `r start_schools + which.max(traj$I)`. Hem de tenir en compte que aquí es nota força que les dades són de 10 dies enrere, i per tant aquest model segurament evolucioni amb el temps. 
+
+# Rho escoles en relació a la rho total
+
+Per acabar, mirem quin percentatge de la $\rho_0$ total és causat per les escoles. Per fer-ho, compararem el valor escolar que hem mesurat prèviament amb el valor poblacional que calculem a partir de les dades poblacionals. Noteu que els càlculs de la $\rho_0$ dins de les escoles i a la població són diferents per raons òbvies, però assumirem que es poden comparar.
+
+```{r}
+# get population covid data
+df_pop <- import_covid(start_schools - 14, today - correction)
+```
+
+```{r}
+# Clean them
+wt <- clean_covid(df_pop)
+
+# Compute rho
+wt$rho <- compute_rhoN(wt, N = 7)
+```
+
+```{r}
+df_rho <- wt %>%
+  select(c(1, 15:ncol(.)))
+k = 2
+for (i in 15:ncol(wt)) {
+  df_rho[, k] <- compute_rhoN(wt[, 1:i]) 
+  k = k + 1
+}
+```
+
+```{r}
+path_ <- file.path(proj_dir, "data", "municipis.xlsx")
+pb <- read_excel(path_)
+
+# The codes from the API have 6 digits but in here only five (good job, gene).
+# We have discovered that reoving the last number, both codes match, so that's
+# what we are doing here
+pb$Codi <- substr(pb$Codi, 1, 5)
+```
+
+```{r}
+# start by taking the weigthed mean of all rho's, maybe in the future we can explore per regions
+rhos <- df_rho %>% 
+  inner_join(pb, by = c("municipicodi" = "Codi"))
+m_rhos <- as.data.frame(apply(rhos[, 2:40], 
+                            2, 
+                            function(x) weighted.mean(x, rhos$Població / sum(rhos$Població))))
+names(m_rhos) <- "rho"
+m_rhos$date = rownames(m_rhos)
+```
+
+```{r}
+# put together with the school rhos
+m_rhos <- m_rhos %>%
+  inner_join(rho_average, by = c("date" = "name"))
+```
+
+Dibuixem tots:
+
+```{r}
+fig <- plot_ly(m_rhos, x = ~ date)
+fig <- fig %>% add_trace(y = ~ rho, name = "Rho total", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Escola, name = "Escola", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut, name = "Institut", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ `Institut-Escola`, name = "Institut-Escola", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+
+fig
+```
+
+Aquí veiem clarament com les escoles tenen una $\rho_0$ molt semblant a la població, és a dir, que poden ser casos importants, però en canvi els instituts estan molt per sobre, arribant fins i tot al doble de la rho poblacional.
+
+## Inferim causes
+
+Aquí volem veure quina part de la rho poblacional és causa de la rho dels centres educatius i quina és causa d'altres factors. Aquest apartat té dues limitacions molt evidents: la primera, que hi ha molts contagis entre infants i adolescents que passen amb els grups bombolla, però no dins de l'escola. Això és especialment així amb els adolescents. De totes maneres, assumim que, si el centre escolar estés tancat, aquestes trobades també es reduirien. Per altra banda, no estem mesurant ni tenint en compte els contagis des dels nens i adolescents cap a persones del seu entorn que no són del seu grup bombolla. En particular, és important el contagi cap a la seva família. Les dues limitacions van en direccions oposades, així que assumim que aproximadament es cancel·len entre elles. 
+
+```{r}
+# get school covid adta
+import_age_groups <- function() {
+  q <- "https://analisi.transparenciacatalunya.cat/resource/qwj8-xpvk.json"
+  read.socrata(q, stringsAsFactors = F) 
+}
+df_age <- import_age_groups()
+```
+
+```{r}
+df_props <- df_age %>%
+  group_by(data, edatrang) %>%
+  mutate(numcasos = as.numeric(numcasos)) %>%
+  summarise_at("numcasos", sum) %>%
+  mutate(data = ymd(data)) %>%
+  filter(data > ymd("2020-09-13")) %>%
+  mutate(age_group = case_when(
+    edatrang == "0-9" | edatrang == "10-19" ~ "<20",
+    T ~ ">20"
+  )) %>%
+  group_by(data, age_group) %>%
+  summarise_at("numcasos", sum) %>%
+  group_by(data) %>%
+  mutate(prop = prop.table(numcasos)) %>%
+  filter(age_group == "<20", data < today() - 3)
+```
+
+Fem un gràfic de la proporció:
+
+```{r}
+ggplot(df_props, aes(data, prop)) + 
+  geom_smooth(se = F) + 
+  theme_bw() +
+  scale_x_date(date_breaks = "2 day") +
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+```
+
+Es veu clarament la pujada de la proporció de casos respecte del total a principi de curs i després es manté més o menys constant, tot i que potser amb una petita reducció els últims dies. 
+
+```{r}
+m_rhos <- m_rhos %>%
+  mutate(date = ymd(date)) %>%
+  inner_join(df_props, by = c("date" = "data")) %>%
+  inner_join(temp_rho)
+```
+
+Ara imaginem que la $\rho_0$ a les escoles fos 0 (cosa que no seria certa perquè també hi estem entrant casos que provenen de fora, però només per fer l'exercici teòric), mirem com seria la nova $\rho_0$ poblacional. L'equació que les lliga és:
+
+\[ \rho_T = \frac{\rho_E \cdot r + \rho_P}{1 + r} \], o, aïllant $\rho_P$, que és la que ens interessa ara:
+
+\[ \rho_P = (1 + r) \rho_T - r\rho_E \], on
+
+$\rho_T$ és la $\rho$ total,
+
+$\rho_P$ és la $\rho$ poblacional,
+
+$\rho_E$ és la $\rho$ a les escoles i 
+
+\[ r = \frac{casos\;escoles}{casos\;totals} \] és la fracció entre els casos a les escoles i els totals.
+
+
+Hem de tenir en compte que la proporció que tenim és de 0 a 20 anys i nosaltres necessitem la de 5 a 18 (aproximadament), per fer-ho, com a primera aproximació, simplement dividim per 20 i multipliquem per 14.
+
+```{r}
+rho_p <- function(t, e, r, correction) {
+  cr = r * correction
+  (1 + cr) * t - cr * e
+}
+tt <- m_rhos %>%
+  mutate(
+    rho_p = rho_p(rho, school, prop, correction = 14 / 20),
+    per_p = rho_p / rho,
+    per_e = school / rho
+  )
+```
+
+Dibuixem ara tot junt:
+
+```{r}
+fig <- plot_ly(tt, x = ~ date)
+fig <- fig %>% add_trace(y = ~ rho, name = "Rho total", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ school, name = "Rho centres escolars", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ rho_p, name = "Rho població", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+
+fig
+```
+
+Aquí veiem, doncs, que tancant els centres escolars podríem reduir la $\rho_0$ uns 0.15 punts, amb dades de fa 10 dies. 
+
+Si considerem tancar només els instituts:
+
+```{r}
+tti <- m_rhos %>%
+  mutate(
+    rho_p = rho_p(rho, Institut, prop, correction = 6 / 20),
+    per_p = rho_p / rho,
+    per_e = Institut / rho
+  )
+```
+
+```{r}
+fig <- plot_ly(tti, x = ~ date)
+fig <- fig %>% add_trace(y = ~ rho, name = "Rho total", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut, name = "Rho instituts", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ rho_p, name = "Rho població", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+```
+
+Veiem que tancar els insituts ja baixaria la $\rho_0$ uns 0.12 punts ella sola, així que tindria sentit només tancar aquests, insistim, amb dades de fa 10 dies.
+
+Si dibuixem la contribució relativa de les escoles i la població (alerta perquè la rho no és aditiva, així que aquests valors no tenen una traducció directa a percentatges):
+
+```{r}
+fig <- plot_ly(tt, x = ~ date)
+fig <- fig %>% add_trace(y = ~ per_p, name = "Contribució població", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ per_e, name = "Contribució centres escolars", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Contribució a la rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+```
+
+Només amb instituts:
+
+```{r}
+fig <- plot_ly(tti, x = ~ date)
+fig <- fig %>% add_trace(y = ~ per_p, name = "Contribució població", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ per_e, name = "Contribució instituts", type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Contribució a la rho segons provinència",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+```
+
+# Conclusions
+
+## Efecte notable però no determinant
+
+L'efecte dels centres escolars en la pandèmia ha sigut notable, incrementant la rho mitjana de Catalunya en entre 0.05 i 0.21 punts al llarg del mes que han estat obertes; incrementant-se aquest valor els últims dies. No tenim les $\rho$s causades per altres causes, però creiem que aquests valors dels centres escolars no són els que afecten més a la $\rho$ total. Aquests valors segurament varien molt entre regions, ja que n'hi ha que tenen molta més incidència que altres, per en aquest primer estudi ho ajuntem tot.
+
+Aquí també tenim una limitació notable, que és que no sabem exactament quin ha sigut el valor de la transmissió entre bombolles. Els resultats són força depenents d'aquest factor (les rhos respectives es poden multiplicar fins a per 2.5) i necessitaríem més dades per poder ajustar millor els valors. 
+
+## Escola vs Institut
+
+En aquest anàlisi confirmem allò que ja hem estat veient aquests dies, amb dades per exemple provinents d'Isreal, que les escoles **no** es comporten com focus significatiu de contagis, però en canvi els instituts **sí**. És per això que creiem que una actuació molt clarament necessària a curt termini és eliminar la presencialitat en tots els estudis per a majors de 12 anys. En canvi, si durant els propers dies no canvia la tendència de les escoles, aquestes podrien mantenir-se obertes, com a mínim en aquelles zones on la incidència no sigui aclaparadora. 
