@@ -10,3 +10,4 @@ packrat
 packrat/lib*/
 daily
 launcher.R
+*.html
