@@ -172,7 +172,7 @@ ui <- function() {
                )
              )),
     tabPanel("Estudi longitudinal",
-             withMathJax(tags$iframe(src = 'https://www.projecteorbita.cat/wp-content/uploads/2020/10/longitudinal-3.html',
+             withMathJax(tags$iframe(src = '/analysis/clean_mkd.html',
                          width = '100%', height = '800px', 
                          frameborder = 0, scrolling = 'auto'))),
     tabPanel("Documentació",
