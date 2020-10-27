@@ -172,9 +172,9 @@ ui <- function() {
                )
              )),
     tabPanel("Estudi longitudinal",
-             tags$iframe(src = 'www/analysis/longitudinal.html',
+             withMathJax(tags$iframe(src = 'https://www.projecteorbita.cat/wp-content/uploads/2020/10/longitudinal-3.html',
                          width = '100%', height = '800px', 
-                         frameborder = 0, scrolling = 'auto')),
+                         frameborder = 0, scrolling = 'auto'))),
     tabPanel("Documentació",
              fluidRow(column(width = 2, ""), column(width = 8, uiOutput("docs")), column(width = 2, ""))),
     tabPanel("Qui som", fluidRow(column(width = 2, ""), column(width = 8, uiOutput("quisom")), column(width = 2, ""))),
