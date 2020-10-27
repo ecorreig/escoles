@@ -4,7 +4,7 @@ author: "Projecte Òrbita"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
-    mathjax: "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+    mathjax: "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 ---
 
 ```{r setup, include=FALSE}
@@ -306,9 +306,6 @@ df_pop <- import_covid(start_schools - 14, today - correction)
 ```{r}
 # Clean them
 wt <- clean_covid(df_pop)
-
-# Compute rho
-wt$rho <- compute_rhoN(wt, N = 7)
 ```
 
 ```{r}
@@ -371,7 +368,7 @@ Aquí veiem clarament com les escoles tenen una $\rho_0$ molt semblant a la pobl
 Aquí volem veure quina part de la rho poblacional és causa de la rho dels centres educatius i quina és causa d'altres factors. Aquest apartat té dues limitacions molt evidents: la primera, que hi ha molts contagis entre infants i adolescents que passen amb els grups bombolla, però no dins de l'escola. Això és especialment així amb els adolescents. De totes maneres, assumim que, si el centre escolar estés tancat, aquestes trobades també es reduirien. Per altra banda, no estem mesurant ni tenint en compte els contagis des dels nens i adolescents cap a persones del seu entorn que no són del seu grup bombolla. En particular, és important el contagi cap a la seva família. Les dues limitacions van en direccions oposades, així que assumim que aproximadament es cancel·len entre elles. 
 
 ```{r}
-# get school covid adta
+# get school covid data
 import_age_groups <- function() {
   q <- "https://analisi.transparenciacatalunya.cat/resource/qwj8-xpvk.json"
   read.socrata(q, stringsAsFactors = F) 

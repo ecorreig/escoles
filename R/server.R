@@ -236,6 +236,9 @@ server <- function(input, output, session) {
     evo_plot_2(evo)
   })
   
+  # longitudinal
+  # TODO
+  
   
   # Actions
   
@@ -306,71 +309,10 @@ server <- function(input, output, session) {
 
   })
 
-  # Working, but not useful
-  # observeEvent(input$mymap_marker_click, {
-  #   clickId <- input$mymap_marker_click$id
-  #   rowId <- which(clean_schools()$Codi_centre == clickId)
-  #   DT::dataTableProxy("school_table") %>%
-  #     selectRows(rowId) %>%
-  #     selectPage(which(input$school_table_rows_all == rowId) %/% input$school_table_state$length + 1)
-  # })
-  
   
 
   
-  
-  # Actions
-  # NOT WORKING -------------------------
 
-  # observeEvent(input$mymap_marker_click, {
-  #   event <- input$mymap_marker_click
-  #   mis_info <- is.na(clean_schools() %>% filter(Codi.centre == event$id) %>% pull(num_alumnes))
-  #   if (!is.null(event) & mis_info) {
-  #     output$school_details <- renderUI({
-  #       tagList(
-  #       numericInput("line_num", h3("Número de línies"),
-  #                    value = 1),
-  #       numericInput("course_num", h3("Número de cursos"),
-  #                    value = 1),
-  #       numericInput("als_per_class", h3("Alumnes per classe"),
-  #                    value = 25),
-  #       actionButton("input_1", "Entra els valors"),
-  #       helpText(
-  #         "Si saps la informació de l'escola durant aquest curs, podrem calcular ",
-  #         "de forma més acurada les probabilitats de l'escola. ",
-  #         "Omple els tres valors d'aquí sobre o el número total ",
-  #         "d'alumnes aquí sota."
-  #       ),
-  #       sliderInput("student_num", h3("Número total d'alumnes"),
-  #                   min = 0, max = 2000, value = 300),
-  #       actionButton("input_2", "Entra el valor")
-  #       )
-  #       helpText("-----------------")
-  #     })
-  #   }
-  # })
-  # # Not working:
-  # eventReactive(T, {
-  #   print(output)
-  # })
-  # eventReactive(output.school_details.input_1, {
-  #   print("input 1!!")
-  #
-  #   clean_schools() %>%
-  #     filter(Codi.centre == event$id) %>%
-  #     mutate(cursos = output$school_details$course_num,
-  #            linies = output$school_details$line_num,
-  #            als_per_classe = output$school_details$als_per_class) %>%
-  #     mutate(num_alumnes = cursos * linies * als_per_classe) %>%
-  #     write.csv(., "escoles_2.csv", row.names = F)
-  # })
-  # eventReactive(output.school_details.input_2, {
-  #   print("input 2!!")
-  #   clean_schools() %>%
-  #     filter(Codi.centre == event$id) %>%
-  #     mutate(num_alumnes = output$school_details$student_num) %>%
-  #     write.csv(., "escoles_2.csv", row.names = F)
-  # })
 
 
 }

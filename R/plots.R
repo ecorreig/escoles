@@ -22,3 +22,7 @@ evo_plot_2 <- function(evo) {
                           legend = list(x = 0.01, y = 0.99))
   fig2
 }
+
+
+# Longitudinal plots
+# TODO
