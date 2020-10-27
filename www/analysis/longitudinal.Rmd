@@ -21,6 +21,7 @@ proj_dir <- rstudioapi::getActiveProject()
 source(file.path(proj_dir, "R", "calcs.R"), encoding = enc)
 source(file.path(proj_dir, "R", "data.R"), encoding = enc)
 source(file.path(proj_dir, "R", "calc_funcs.R"), encoding = enc)
+plot_dir <- "plots"
 ```
 
 ```{r}
@@ -162,6 +163,7 @@ fig <- fig %>% layout(title = "Evolució de la rho als centres educatius",
                       legend = list(x = 0.01, y = 0.99))
 fig
 
+# export(fig, file.path(plot_dir, "rho_ce.png"))
 ```
 
 Classifiquem els centres escolars en guarderies, escoles, instituts, escola-institut o altres.
@@ -205,6 +207,7 @@ fig <- fig %>% layout(title = "Evolució de la rho als centres educatius segons 
                       legend = list(x = 0.01, y = 0.99))
 fig
 
+#export(fig, file.path(plot_dir, "rho_ces.png"))
 ```
 
 Sense tants sotracs:
@@ -219,10 +222,77 @@ dfm <- reshape2::melt(rho_average) %>%
   )
 ggplot(dfm, aes(x = name, y = value, colour = variable)) + 
   geom_smooth(method = "loess", se = F) + 
-  theme_bw()
+  theme_bw() +
+  ggsave(filename = file.path(plot_dir, "loess_rho_ce.png"))
 ```
 
 Així doncs, veiem que la rho 0 s'ha trobat per sobre d'1 durant gairebé tot el període, sent especialment preocupant en els instituts i els instituts escola, on, encara que les bombolles s'haguessin matingut, arribem a valors per sobre del 2 aquests últims dies. 
+
+## Proporcions de causes de casos als centres escolars
+
+```{r}
+temp_rho <- temp_rho %>% mutate(prop_ce = school /(school + 1) * 100, 
+                    prop_fora = 100 - prop_ce)
+fig <- plot_ly(temp_rho, x = ~ date)
+fig <- fig %>% add_trace(y = ~ prop_ce, name = "Proporció causada als centres escolars", 
+                         type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ prop_fora, name = "Proporció importada des de fora", 
+                         type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Proporció contagis als centres educatius",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+
+# export(fig, file.path(plot_dir, "prop_ce.png"))
+```
+
+Si separem entre escoles i instituts veiem que hi ha diferències notables
+
+```{r}
+temp <- rho_average %>%
+  mutate(
+    prop_esc = Escola / (Escola + 1) * 100,
+    prop_fora_esc = 100 - prop_esc,
+    prop_inst = Institut / (Institut + 1) * 100,
+    prop_fora_inst = 100 - prop_inst,
+    name = ymd(name)
+  )
+```
+
+### Escoles
+
+```{r}
+fig <- plot_ly(temp, x = ~ name)
+fig <- fig %>% add_trace(y = ~ prop_esc, name = "Proporció causada a les escoles", 
+                         type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ prop_fora_esc, name = "Proporció importada des de fora", 
+                         type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Proporció contagis a les escoles",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+
+#export(fig, file.path(plot_dir, "rho_ces.png"))
+```
+
+### Instituts
+
+```{r}
+fig <- plot_ly(temp, x = ~ name)
+fig <- fig %>% add_trace(y = ~ prop_inst, name = "Proporció causada als instituts", 
+                         type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ prop_fora_inst, name = "Proporció importada des de fora", 
+                         type = "scatter", mode = "lines")
+
+fig <- fig %>% layout(title = "Proporció contagis als instituts",
+                      yaxis = list(title = ""),
+                      legend = list(x = 0.01, y = 0.99))
+fig
+
+#export(fig, file.path(plot_dir, "rho_ces.png"))
+```
 
 # Model SIR
 
@@ -257,6 +327,8 @@ fig <- fig %>% layout(title = "Evolució dels confinaments i casos positius",
                       legend = list(x = 0.01, y = 0.99))
 
 fig
+
+#export(fig, file.path(plot_dir, "evo_1.png"))
 ```
 
 Fixem-nos que totes les corbes són inicis d'exponencials, que ja ens fa pensar que anem ben encaminats amb models SIR.
@@ -265,7 +337,7 @@ Fem el cas dels alumnes, que és segurament el més robust en tenir tants casos:
 
 ```{r}
 data(SIR)
-theta <- c(R0 = 1.275, D_inf = 2)
+theta <- c(R0 = 1.265, D_inf = 2)
 pop <- 1600000
 init.state <- c(S = pop, I = 1110, R = round(pop * .05))
 times <- 1:100
@@ -287,7 +359,8 @@ ggplot(epi, aes(x = time, y = total)) +
   geom_point() + 
   xlim(c(1, 50)) +
   geom_line(aes(y = I), colour = "red") +
-  theme_bw()
+  theme_bw() + 
+  ggsave(file.path(plot_dir, "epi.png"))
 ```
 
 Aquest gràfic ens mostra que el ritme de contagis és l'esperable en un model SIR amb $\rho_0 = 1.275$. Aquest és un model sobre-simplificat perquè sabem que la rho ha estat pujant aquests últims dies. A més, amb només aquesta informació no sabem si els contagis són dins de l'escola o simplement reflecteixen la $\rho_0$ de fora de la població general. En tot cas, sí que mostra que la $\rho_0$ efectiva a les escoles sempre ha sigut més alta que la reportada per la població general, per tant podem afirmar que aquestes han estat actuant com a acceledores de la pandèmia. Si són les acceledarores principals o no, ho intentarem esbrinar en el següent apartat.
@@ -359,6 +432,8 @@ fig <- fig %>% layout(title = "Rho segons provinència",
                       legend = list(x = 0.01, y = 0.99))
 
 fig
+
+#export(fig, file.path(plot_dir, "rho_tots.png"))
 ```
 
 Aquí veiem clarament com les escoles tenen una $\rho_0$ molt semblant a la població, és a dir, que poden ser casos importants, però en canvi els instituts estan molt per sobre, arribant fins i tot al doble de la rho poblacional.
@@ -401,7 +476,8 @@ ggplot(df_props, aes(data, prop)) +
   geom_smooth(se = F) + 
   theme_bw() +
   scale_x_date(date_breaks = "2 day") +
-  theme(axis.text.x=element_text(angle=60, hjust=1))
+  theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+  ggsave(file.path(plot_dir, "prop.png"))
 ```
 
 Es veu clarament la pujada de la proporció de casos respecte del total a principi de curs i després es manté més o menys constant, tot i que potser amb una petita reducció els últims dies. 
@@ -456,6 +532,8 @@ fig <- fig %>% layout(title = "Rho segons provinència",
                       legend = list(x = 0.01, y = 0.99))
 
 fig
+
+#export(fig, file.path(plot_dir, "rho_prov1.png"))
 ```
 
 Aquí veiem, doncs, que tancant els centres escolars podríem reduir la $\rho_0$ uns 0.15 punts, amb dades de fa 10 dies. 
@@ -481,6 +559,8 @@ fig <- fig %>% layout(title = "Rho segons provinència",
                       yaxis = list(title = ""),
                       legend = list(x = 0.01, y = 0.99))
 fig
+
+#export(fig, file.path(plot_dir, "rho_prov2.png"))
 ```
 
 Veiem que tancar els insituts ja baixaria la $\rho_0$ uns 0.12 punts ella sola, així que tindria sentit només tancar aquests, insistim, amb dades de fa 10 dies.
@@ -496,6 +576,8 @@ fig <- fig %>% layout(title = "Contribució a la rho segons provinència",
                       yaxis = list(title = ""),
                       legend = list(x = 0.01, y = 0.99))
 fig
+
+#export(fig, file.path(plot_dir, "rho_prov3.png"))
 ```
 
 Només amb instituts:
@@ -509,6 +591,8 @@ fig <- fig %>% layout(title = "Contribució a la rho segons provinència",
                       yaxis = list(title = ""),
                       legend = list(x = 0.01, y = 0.99))
 fig
+
+#export(fig, file.path(plot_dir, "rho_prov4.png"))
 ```
 
 # Conclusions

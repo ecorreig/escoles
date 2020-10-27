@@ -51,6 +51,26 @@ include_graphics(path.expand("plots/loess_rho_ce.png"))
 
 Així doncs, veiem que la rho 0 s'ha trobat per sobre d'1 durant gairebé tot el període, sent especialment preocupant en els instituts i els instituts escola, on, encara que les bombolles s'haguessin matingut, arribem a valors per sobre del 2 aquests últims dies. 
 
+## Proporcions de causes de casos als centres escolars
+
+```{r out.width="80%"}
+include_graphics(path.expand("plots/prop_ce.png"))
+```
+
+Si separem entre escoles i instituts veiem que hi ha diferències notables
+
+### Escoles
+
+```{r out.width="80%"}
+include_graphics(path.expand("plots/prop_esc.png"))
+```
+
+### Instituts
+
+```{r out.width="80%"}
+include_graphics(path.expand("plots/prop_inst.png"))
+```
+
 # Model SIR
 
 Ajustem un model SIR al nombre de casos per tal de trobar aquesta rho 0 de forma teòrica:
@@ -69,7 +89,7 @@ Fem el cas dels alumnes, que és segurament el més robust en tenir tants casos:
 include_graphics(path.expand("plots/epi.png"))
 ```
 
-Aquest gràfic ens mostra que el ritme de contagis és l'esperable en un model SIR amb $\rho_0 = 1.275$. Aquest és un model sobre-simplificat perquè sabem que la rho ha estat pujant aquests últims dies. A més, amb només aquesta informació no sabem si els contagis són dins de l'escola o simplement reflecteixen la $\rho_0$ de fora de la població general. En tot cas, sí que mostra que la $\rho_0$ efectiva a les escoles sempre ha sigut més alta que la reportada per la població general, per tant podem afirmar que aquestes han estat actuant com a acceledores de la pandèmia. Si són les acceledarores principals o no, ho intentarem esbrinar en el següent apartat.
+Aquest gràfic ens mostra que el ritme de contagis és l'esperable en un model SIR amb $\rho_0 = 1.27$. Aquest és un model sobre-simplificat perquè sabem que la rho ha estat pujant aquests últims dies. A més, amb només aquesta informació no sabem si els contagis són dins de l'escola o simplement reflecteixen la $\rho_0$ de fora de la població general. En tot cas, sí que mostra que la $\rho_0$ efectiva a les escoles sempre ha sigut més alta que la reportada per la població general, per tant podem afirmar que aquestes han estat actuant com a acceledores de la pandèmia. Si són les acceledarores principals o no, ho intentarem esbrinar en el següent apartat.
 
 # Rho escoles en relació a la rho total
 
