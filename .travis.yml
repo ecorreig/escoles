@@ -5,4 +5,4 @@ deploy:
   file_glob: true
   script: bash scripts/ci/package.sh
   on:
-    branch: master
+    branch: main
