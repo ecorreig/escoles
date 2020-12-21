@@ -1,4 +1,4 @@
-**Actualització:** Aquesta feina ha estat aturada des del 23/11 però ha estat represa i actualitzada des del 21/12. Disculpeu les molèsties.
+**Actualització:** Aquesta feina ha estat aturada des del 23/11 per un canvi en el format de les dades de salud, però ha estat represa i actualitzada des del 21/12 en adaptar-se al nou format. Disculpeu les molèsties.
 
 
 # Introducció
