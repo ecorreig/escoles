@@ -32,6 +32,13 @@ correction <- 3
 ```
 
 ```{r}
+roll_mean <- function(x, n) {
+  zoo::rollmean(x, n, fill = NA, align = "right")
+}
+```
+
+
+```{r}
 # get school covid data
 import_covid_schools <- function() {
   q <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
@@ -150,14 +157,14 @@ temp_rho <- as.data.frame(apply(rho_df[, (num_ + 1):end_], 2, function(x) mean(x
   rename_all(funs(c("school"))) %>%
   mutate(
     date = ymd(rownames(.)),
-    avg_5day = zoo::rollmean(school, 5, fill = NA, align = "right")
+    avg_5day = roll_mean(school, 5)
   )
 
 ```
 
 ```{r}
 fig <- plot_ly(temp_rho, x = ~ date)
-fig <- fig %>% add_trace(y = ~ school, name = "Rho mitjana", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ avg_5day, name = "Rho mitjana (mitjana últims 5 dies)", type = "scatter", mode = "lines")
 
 fig <- fig %>% layout(title = "Evolució de la rho als centres educatius",
                       yaxis = list(title = ""),
@@ -193,15 +200,21 @@ rho_average <- rho_df %>%
   ) %>% 
   pivot_longer(-tipus) %>%
   pivot_wider(names_from = tipus, values_from = value) %>%
-  mutate_all(funs(zoo::na.locf))
+  mutate_all(funs(zoo::na.locf)) %>% 
+  mutate(
+    Escola_avg5 = roll_mean(Escola, 5),
+    Institut_avg5 = roll_mean(Institut, 5),
+    Institut_Escola_avg5 = roll_mean(`Institut-Escola`, 5),
+    Altres_avg5 = roll_mean(Altres, 5)
+  )
 ```
 
 ```{r}
 fig <- plot_ly(rho_average, x = ~ name)
-fig <- fig %>% add_trace(y = ~ Escola, name = "Escola", type = "scatter", mode = "lines")
-fig <- fig %>% add_trace(y = ~ Institut, name = "Institut", type = "scatter", mode = "lines")
-fig <- fig %>% add_trace(y = ~ `Institut-Escola`, name = "Institut-Escola", type = "scatter", mode = "lines")
-fig <- fig %>% add_trace(y = ~ Altres, name = "Altres", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Escola_avg5, name = "Escola", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut_avg5, name = "Institut", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Institut_Escola_avg5, name = "Institut-Escola", type = "scatter", mode = "lines")
+fig <- fig %>% add_trace(y = ~ Altres_avg5, name = "Altres", type = "scatter", mode = "lines")
 
 fig <- fig %>% layout(title = "Evolució de la rho als centres educatius segons el tipus",
                       yaxis = list(title = ""),
@@ -232,8 +245,13 @@ Així doncs, veiem que la rho 0 s'ha trobat per sobre d'1 durant gairebé tot el
 ## Proporcions de causes de casos als centres escolars
 
 ```{r}
-temp_rho <- temp_rho %>% mutate(prop_ce = school /(school + 1) * 100, 
-                    prop_fora = 100 - prop_ce)
+temp_rho <- temp_rho %>% 
+  mutate(
+    prop_ce = school /(school + 1) * 100, prop_fora = 100 - prop_ce,
+    prop_ce = roll_mean(prop_ce, 5),
+    prop_fora = roll_mean(prop_fora, 5)
+    
+    )
 fig <- plot_ly(temp_rho, x = ~ date)
 fig <- fig %>% add_trace(y = ~ prop_ce, name = "Proporció causada als centres escolars", 
                          type = "scatter", mode = "lines")
@@ -253,10 +271,10 @@ Si separem entre escoles i instituts veiem que hi ha diferències notables
 ```{r}
 temp <- rho_average %>%
   mutate(
-    prop_esc = Escola / (Escola + 1) * 100,
-    prop_fora_esc = 100 - prop_esc,
-    prop_inst = Institut / (Institut + 1) * 100,
-    prop_fora_inst = 100 - prop_inst,
+    prop_esc = roll_mean(Escola / (Escola + 1) * 100, 5),
+    prop_fora_esc = roll_mean(100 - prop_esc, 5),
+    prop_inst = roll_mean(Institut / (Institut + 1) * 100, 5),
+    prop_fora_inst = roll_mean(100 - prop_inst, 5),
     name = ymd(name)
   )
 ```
@@ -416,7 +434,13 @@ m_rhos$date = rownames(m_rhos)
 ```{r}
 # put together with the school rhos
 m_rhos <- m_rhos %>%
-  inner_join(rho_average, by = c("date" = "name"))
+  inner_join(rho_average, by = c("date" = "name")) %>%
+  mutate(
+    rho = roll_mean(rho, 5),
+    Escola = roll_mean(Escola, 5),
+    Institut = roll_mean(Institut, 5),
+    `Institut-Escola` = roll_mean(`Institut-Escola`, 5),
+  )
 ```
 
 Dibuixem tots:
@@ -517,7 +541,12 @@ tt <- m_rhos %>%
   mutate(
     rho_p = rho_p(rho, school, prop, correction = 14 / 20),
     per_p = rho_p / rho,
-    per_e = school / rho
+    per_e = school / rho,
+    rho = roll_mean(rho, 5),
+    school = roll_mean(school, 5),
+    rho_p = roll_mean(rho_p, 5),
+    per_p = roll_mean(per_p, 5),
+    per_e = roll_mean(per_e, 5)
   )
 ```
 
@@ -547,7 +576,12 @@ tti <- m_rhos %>%
   mutate(
     rho_p = rho_p(rho, Institut, prop, correction = 6 / 20),
     per_p = rho_p / rho,
-    per_e = Institut / rho
+    per_e = Institut / rho,
+    rho = roll_mean(rho, 5),
+    Institut = roll_mean(Institut, 5),
+    rho_p = roll_mean(rho_p, 5),
+    per_p = roll_mean(per_p, 5),
+    per_e = roll_mean(per_e, 5)
   )
 ```
 
