@@ -3,8 +3,9 @@ import_covid <- function(start, end) {
   # Import COVID cases from API
   # TODO: filter by date already in the query
   p <- "https://analisi.transparenciacatalunya.cat/resource/jj6z-iyrp.json"
-  q <- "?$where=resultatcoviddescripcio='Positiu PCR'"
-  l <- paste0(p, q)
+  q <- paste0("?$where=resultatcoviddescripcio='Positiu PCR' and data > '", start, "'")
+  s <- "&$select=data,municipicodi,numcasos"
+  l <- paste0(p, q, s)
   covid <- read.socrata(l, stringsAsFactors = F)
 
   covid$data <- ymd(covid$data)
