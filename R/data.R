@@ -1,5 +1,6 @@
 
 import_covid <- function(start, end) {
+  warning("import_covid")
   # Import COVID cases from API
   # TODO: filter by date already in the query
   p <- "https://analisi.transparenciacatalunya.cat/resource/jj6z-iyrp.json"
@@ -15,6 +16,7 @@ import_covid <- function(start, end) {
 }
 
 clean_covid <- function(covid) {
+  warning("clean_covid")
   tidyr::pivot_wider(
     covid %>%
       mutate_at("numcasos", as.numeric) %>%
@@ -28,6 +30,7 @@ clean_covid <- function(covid) {
 }
 
 reformat_covid <- function(wt) {
+  warning("reformat_covid")
   # Obsolete?
   wt %>%  pivot_longer(-"municipicodi") %>%
     pivot_wider(names_from = municipicodi, values_from = value) %>%
@@ -38,6 +41,7 @@ reformat_covid <- function(wt) {
 }
 
 get_24h_cases <- function(covid, end) {
+  warning("get_24h_cases")
   covid[(covid$data > end), c("municipicodi", "numcasos")] %>%
     mutate_at("numcasos", as.numeric) %>%
     group_by(municipicodi) %>%
@@ -46,6 +50,7 @@ get_24h_cases <- function(covid, end) {
 }
 
 merge_covid <- function(covid, last, wt) {
+  warning("merge_covid")
   covid %>%
     mutate(across("numcasos", as.numeric)) %>%
     group_by(municipicodi) %>%
@@ -57,6 +62,7 @@ merge_covid <- function(covid, last, wt) {
 }
 
 merge_pob_covid <- function(pb, covid) {
+  warning("merge_pob_covid")
   pb %>% rename_all(funs(make_ascii(names(pb)))) %>%
     full_join(covid, by = c("Codi" = "municipicodi")) %>%
     filter(!is.na(Poblacio)) %>%
@@ -64,6 +70,7 @@ merge_pob_covid <- function(pb, covid) {
 }
 
 format_outputs <- function(df) {
+  warning("format_outputs")
   df$rho <- round(df$rho, 2)
   df$taxa_incidencia_14d <- round(df$taxa_incidencia_14d)
   df$taxa_casos_nous <- round(df$taxa_casos_nous)
@@ -76,6 +83,7 @@ format_outputs <- function(df) {
 }
 
 import_pop_data <- function() {
+  warning("import_pop_data")
   path_ <- file.path(getwd(), "data", "municipis.xlsx")
   pb <- read_excel(path_)
 
@@ -88,6 +96,7 @@ import_pop_data <- function() {
 }
 
 update_data_DEPRECATED <- function() {
+  warning("update_data_DEPRECATED")
   # This was used when the webpage had the data in the old format
   # Get school covid status
   headers <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
@@ -95,7 +104,7 @@ update_data_DEPRECATED <- function() {
   df <- read.csv(url("https://tracacovid.akamaized.net/data.csv", headers = headers), sep = ";")
   # Get shool data
   es <- readxl::read_xlsx(file.path("data", "escoles_base.xlsx"))
-  
+
   # Merge
   tot <-
     es %>% left_join(df,
@@ -112,52 +121,54 @@ update_data_DEPRECATED <- function() {
         TRUE ~ as.numeric(GRUP_CONFIN)
       ),
       DATAGENERACIO = lubridate::dmy_hm(DATAGENERACIO)
-      
+
     )
-  
+
   # Check whether data is new
   data_creacio <- lubridate::now()
-  
+
   # Store if it's new
   files <- list.files(file.path(getwd(), "data",  "daily"))
   name <- make.names(paste0(data_creacio, ".csv"))
-  
+
   # only save on local FIXME (ugly hack)
-  if (!name %in% files & Sys.info()["sysname"] == "Windows") { 
+  if (!name %in% files & Sys.info()["sysname"] == "Windows") {
     pa <- file.path(file.path(getwd(), "data", "daily", name))
     write.csv(tot, pa, row.names = F)
   }
-  
+
   tot
 }
 
 
 import_covid_schools <- function() {
+  warning("import_covid_schools")
   q <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
   read.socrata(q, stringsAsFactors = F) %>%
     mutate(
       datageneracio = lubridate::ymd(datageneracio)
-    )  %>% 
+    )  %>%
     group_by(codcentre) %>%
     slice(which.max(datacreacio)) %>%
     rename_with(toupper)
 }
 
 update_data <- function() {
+  warning("update_data")
   # Get school covid status
   q <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
   df <- read.socrata(q, stringsAsFactors = F) %>%
     mutate(
       datageneracio = lubridate::ymd(datageneracio)
-    )  %>% 
+    )  %>%
     group_by(codcentre) %>%
     slice(which.max(datacreacio)) %>%
     rename_with(toupper)
   # Get shool data
   es <- readxl::read_xlsx(file.path("data", "escoles_base.xlsx"), col_types = "text")
-  
+
   # Merge
-  tot <- es %>% 
+  tot <- es %>%
     left_join(df,
               by = c("Codi centre" = "CODCENTRE"),
               suffix = c("", "")) %>%
@@ -172,7 +183,7 @@ update_data <- function() {
         TRUE ~ as.numeric(GRUP_CONFIN)
       ),
       DATAGENERACIO = lubridate::ymd(DATAGENERACIO)
-      
+
     ) %>%
     mutate(
       ALUMN_CONFIN = as.numeric(ALUMN_CONFIN),
@@ -188,34 +199,36 @@ update_data <- function() {
       Coordenades_GEO_X = as.numeric(gsub(",", ".", Coordenades_GEO_X, fixed = T)),
       Coordenades_GEO_Y = as.numeric(gsub(",", ".", Coordenades_GEO_Y, fixed = T))
     )
-  
+
   # Check whether data is new
   data_creacio <- lubridate::now()
-  
+
   # Store if it's new
   files <- list.files(file.path(getwd(), "data",  "daily"))
   name <- make.names(paste0(data_creacio, ".csv"))
-  
+
   # only save on local FIXME (ugly hack)
-  if (!name %in% files & Sys.info()["sysname"] == "Windows") { 
+  if (!name %in% files & Sys.info()["sysname"] == "Windows") {
     pa <- file.path(file.path(getwd(), "data", "daily", name))
     write.csv(tot, pa, row.names = F)
   }
-  
+
   tot
 }
 
 
 # Import school data
 import_schools <- function() {
+  warning("import_schools")
 
-  update_data() %>%  
+  update_data() %>%
     rename_with(make_ascii) %>%
     mutate(Codi_municipi = as.character(Codi_municipi)) %>%
     mutate(Codi_municipi = ifelse(nchar(Codi_municipi) < 5, paste0("0", Codi_municipi), Codi_municipi))
 }
 
 update_schools_DEPRECATED <- function() {
+  warning("update_schools_DEPRECATED")
   # Warning: only run locally
   # DEPRECRATED
   source("R/secret.R", encoding = "UTF-8")
@@ -228,17 +241,19 @@ update_schools_DEPRECATED <- function() {
 # evo
 
 import_evo <- function() {
-  pa_ <- file.path("data", "evo.csv") 
-  read.csv(pa_, encoding = "UTF-8") %>% 
+  warning("import_evo")
+  pa_ <- file.path("data", "evo.csv")
+  read.csv(pa_, encoding = "UTF-8") %>%
     mutate(
       Dia = lubridate::ymd_hms(Dia)
     )
 }
 
 update_evo <- function(df) {
-  
+  warning("update_evo")
+
   # Careful, this updates records from same datetime (TODO: think about this)
-  evo <- import_evo() %>% 
+  evo <- import_evo() %>%
     add_row(
     Dia = lubridate::now(),
     `Casos.alumnes` = sum(df$ALUMN_POSITIU, na.rm = T),
@@ -249,10 +264,10 @@ update_evo <- function(df) {
     `Escoles.amb.grups.confinats` = sum(df$GRUP_CONFIN > 0, na.rm = T),
     `Escoles.tancades` = sum(df$ESTAT == "Confinat", na.rm = T)
   )
-  
+
   evo <- evo[!duplicated(evo[, -1]), ]
-  
+
   write.csv(evo, file.path("data", "evo.csv"), row.names = F)
   evo
-  
+
 }
