@@ -1,3 +1,6 @@
+**Actualització:** Aquesta feina ha estat aturada des del 23/11 però ha estat represa i actualitzada des del 21/12. Disculpeu les molèsties.
+
+
 # Introducció
 
 Aquesta aplicació ha estat creada pel Projecte Òrbita per tal de facilitar a famílies i escoles l'accés a 
