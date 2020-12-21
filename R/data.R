@@ -6,6 +6,7 @@ import_covid <- function(start, end) {
   q <- paste0("?$where=resultatcoviddescripcio='Positiu PCR' and data > '", start, "'")
   s <- "&$select=data,municipicodi,numcasos"
   l <- paste0(p, q, s)
+  warning(l)
   covid <- read.socrata(l, stringsAsFactors = F)
 
   covid$data <- ymd(covid$data)
@@ -144,9 +145,19 @@ import_covid_schools <- function() {
 }
 
 update_data <- function() {
+  
+  # TODO: fix this
+  days_back <- 14
+  correction <- 3  # Data from last 3 days is no good
+  
+  today <- today()
+  start <- today - days_back - correction - 1
+  
   # Get school covid status
-  q <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
-  df <- read.socrata(q, stringsAsFactors = F) %>%
+  p <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
+  q <- paste0("?$where=datageneracio > '", start, "'")
+  query <- paste0(p, q)
+  df <- read.socrata(query, stringsAsFactors = F) %>%
     mutate(
       datageneracio = lubridate::ymd(datageneracio)
     )  %>% 
