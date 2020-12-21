@@ -32,7 +32,7 @@ correction <- 3
 ```
 
 ```{r}
-# get school covid adta
+# get school covid data
 import_covid_schools <- function() {
   q <- "https://analisi.transparenciacatalunya.cat/resource/fk8v-uqfv.json"
   read.socrata(q, stringsAsFactors = F) %>%
@@ -73,6 +73,7 @@ df <- df_schools %>%
 ```{r}
 # import general school data (the api is not correctly formatted, so i'll do i from the file)
 schools <- readxl::read_xlsx(file.path(proj_dir, "data", "escoles_base.xlsx")) %>%
+  mutate(`Codi centre` = as.numeric(`Codi centre`)) %>%
   filter(`Codi centre` != 1) 
 ```
 
@@ -365,7 +366,7 @@ ggplot(epi, aes(x = time, y = total)) +
 
 Aquest gràfic ens mostra que el ritme de contagis és l'esperable en un model SIR amb $\rho_0 = 1.275$. Aquest és un model sobre-simplificat perquè sabem que la rho ha estat pujant aquests últims dies. A més, amb només aquesta informació no sabem si els contagis són dins de l'escola o simplement reflecteixen la $\rho_0$ de fora de la població general. En tot cas, sí que mostra que la $\rho_0$ efectiva a les escoles sempre ha sigut més alta que la reportada per la població general, per tant podem afirmar que aquestes han estat actuant com a acceledores de la pandèmia. Si són les acceledarores principals o no, ho intentarem esbrinar en el següent apartat.
 
-Abans, però, notem que el valor màxim d'aquesta corba projectada és `r round(max(traj$I))`, que serien el nombre d'infants i adolescents que es contagiarien segons aquest model. Segons aquest model, el màxim seria el dia `r start_schools + which.max(traj$I)`. Hem de tenir en compte que aquí es nota força que les dades són de 10 dies enrere, i per tant aquest model segurament evolucioni amb el temps. 
+Abans, però, notem que el valor màxim d'aquesta corba projectada és `r round(max(traj$I))`, que serien el nombre d'infants i adolescents que es contagiarien segons aquest model. S
 
 # Rho escoles en relació a la rho total
 
@@ -405,7 +406,7 @@ pb$Codi <- substr(pb$Codi, 1, 5)
 # start by taking the weigthed mean of all rho's, maybe in the future we can explore per regions
 rhos <- df_rho %>% 
   inner_join(pb, by = c("municipicodi" = "Codi"))
-m_rhos <- as.data.frame(apply(rhos[, 2:40], 
+m_rhos <- as.data.frame(apply(rhos[, 2:(ncol(rhos) - 5)], 
                             2, 
                             function(x) weighted.mean(x, rhos$Població / sum(rhos$Població))))
 names(m_rhos) <- "rho"
@@ -457,7 +458,7 @@ df_props <- df_age %>%
   mutate(numcasos = as.numeric(numcasos)) %>%
   summarise_at("numcasos", sum) %>%
   mutate(data = ymd(data)) %>%
-  filter(data > ymd("2020-09-13")) %>%
+  filter(data > ymd("2020-08-15")) %>%
   mutate(age_group = case_when(
     edatrang == "0-9" | edatrang == "10-19" ~ "<20",
     T ~ ">20"
@@ -476,7 +477,8 @@ ggplot(df_props, aes(data, prop)) +
   geom_smooth(se = F) + 
   theme_bw() +
   scale_x_date(date_breaks = "2 day") +
-  theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+  ylab("Proporció postitius rang edat 0-20 anys") +
+  theme(axis.text.x=element_text(angle=60, hjust=1))
   ggsave(file.path(plot_dir, "prop.png"))
 ```
 
