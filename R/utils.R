@@ -61,8 +61,8 @@ esc_popup <- function(esc) {
             </ul>
           <strong>Positius:</strong>
             <ul>
-              <li>Alumnes: ",   esc$ALUMN_POSITIU, "</li>
-              <li>Personal: ",   esc$PERSONAL_POSITIU  + esc$ALTRES_POSITIU, "</li>
+              <li>Alumnes: ",   esc$ALUMN_POSITIU_VIG11, "</li>
+              <li>Personal: ",   esc$PERSONAL_POSITIU_VIG11  + esc$ALTRES_POSITIU_VIG11, "</li>
             </ul>
             <strong>Probabilitats de mínim un cas:</strong>
             <ul>
