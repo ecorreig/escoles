@@ -8,7 +8,7 @@ evo_plot_1 <- function(evo) {
   fig <- fig %>% add_trace(y = ~ `Professionals.confinats`, name = "Professional confinat", type = "scatter", mode = "lines")
   fig <- fig %>% layout(title = "Alumnes i professionals",
                         yaxis = list(title = ""),
-                        legend = list(x = 0.01, y = 0.99))
+                        legend = list(x = 0.5, y = 0.99))
   fig
 }
 
@@ -19,7 +19,7 @@ evo_plot_2 <- function(evo) {
   fig2 <- fig2 %>% add_trace(y = ~ `Escoles.tancades`, name = "CEs* tancats", type = "scatter", mode = "lines")
   fig2 <- fig2 %>% layout(title = "Centres educatius",
                           yaxis = list(title = ""),
-                          legend = list(x = 0.01, y = 0.99))
+                          legend = list(x = 0.5, y = 0.99))
   fig2
 }
 
